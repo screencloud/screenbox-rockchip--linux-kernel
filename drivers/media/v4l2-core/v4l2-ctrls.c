@@ -912,6 +912,8 @@ const char *v4l2_ctrl_get_name(u32 id)
 	case V4L2_CID_MPEG_VIDEO_REF_NUMBER_FOR_PFRAMES:	return "Reference Frames for a P-Frame";
 	case V4L2_CID_MPEG_VIDEO_PREPEND_SPSPPS_TO_IDR:		return "Prepend SPS and PPS to IDR";
 
+	case V4L2_CID_MPEG_VIDEO_VP8_FRAME_HDR:			return "VP8 Frame Header";
+
 	/* CAMERA controls */
 	/* Keep the order of the 'case's the same as in v4l2-controls.h! */
 	case V4L2_CID_CAMERA_CLASS:		return "Camera Controls";
@@ -1312,6 +1314,9 @@ void v4l2_ctrl_fill(u32 id, const char **name, enum v4l2_ctrl_type *type,
 	case V4L2_CID_MPEG_VIDEO_H264_DECODE_PARAM:
 		*type = V4L2_CTRL_TYPE_H264_DECODE_PARAM;
 		break;
+	case V4L2_CID_MPEG_VIDEO_VP8_FRAME_HDR:
+		*type = V4L2_CTRL_TYPE_VP8_FRAME_HDR;
+		break;
 	default:
 		*type = V4L2_CTRL_TYPE_INTEGER;
 		break;
@@ -1641,6 +1646,7 @@ static int std_validate(const struct v4l2_ctrl *ctrl, u32 idx,
 	case V4L2_CTRL_TYPE_H264_SCALING_MATRIX:
 	case V4L2_CTRL_TYPE_H264_SLICE_PARAM:
 	case V4L2_CTRL_TYPE_H264_DECODE_PARAM:
+	case V4L2_CTRL_TYPE_VP8_FRAME_HDR:
 		return 0;
 
 	default:
@@ -2231,6 +2237,9 @@ static struct v4l2_ctrl *v4l2_ctrl_new(struct v4l2_ctrl_handler *hdl,
 		break;
 	case V4L2_CTRL_TYPE_H264_DECODE_PARAM:
 		elem_size = sizeof(struct v4l2_ctrl_h264_decode_param);
+		break;
+	case V4L2_CTRL_TYPE_VP8_FRAME_HDR:
+		elem_size = sizeof(struct v4l2_ctrl_vp8_frame_hdr);
 		break;
 	default:
 		if (type < V4L2_CTRL_COMPOUND_TYPES)
