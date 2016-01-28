@@ -15152,7 +15152,6 @@ static void intel_sanitize_crtc(struct intel_crtc *crtc)
 		crtc->base.enabled = crtc->active;
 
 		/* Because we only establish the connector -> encoder ->
-		 * crtc links if something is active, this means the
 		 * crtc is now deactivated. Break the links. connector
 		 * -> encoder links are only establish when things are
 		 *  actually up, hence no need to break them. */
@@ -15352,7 +15351,23 @@ static void intel_modeset_readout_hw_state(struct drm_device *dev)
 	for_each_intel_connector(dev, connector) {
 		if (connector->get_hw_state(connector)) {
 			connector->base.dpms = DRM_MODE_DPMS_ON;
-			connector->base.encoder = &connector->encoder->base;
+
+			encoder = connector->encoder;
+			connector->base.encoder = &encoder->base;
+
+			if (encoder->base.crtc &&
+			    encoder->base.crtc->state->active) {
+				/*
+				 * This has to be done during hardware readout
+				 * because anything calling .crtc_disable may
+				 * rely on the connector_mask being accurate.
+				 */
+				encoder->base.crtc->state->connector_mask |=
+					1 << drm_connector_index(&connector->base);
+				encoder->base.crtc->state->encoder_mask |=
+					1 << drm_encoder_index(&encoder->base);
+			}
+
 		} else {
 			connector->base.dpms = DRM_MODE_DPMS_OFF;
 			connector->base.encoder = NULL;
