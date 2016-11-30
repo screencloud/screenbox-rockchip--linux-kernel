@@ -30,6 +30,17 @@
 
 #include <asm/cacheflush.h>
 
+static pgprot_t __get_dma_pgprot(struct dma_attrs *attrs, pgprot_t prot,
+				 bool coherent)
+{
+	if (dma_get_attr(DMA_ATTR_NON_CONSISTENT, attrs))
+		return prot;
+
+	if (!coherent || dma_get_attr(DMA_ATTR_WRITE_COMBINE, attrs))
+		return pgprot_writecombine(prot);
+	return prot;
+}
+
 static struct gen_pool *atomic_pool;
 
 #define DEFAULT_DMA_COHERENT_POOL_SIZE  SZ_256K
