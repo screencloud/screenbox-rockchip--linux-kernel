@@ -129,14 +129,14 @@
 
 		led1-led {
 			gpios=<&gpio1 25 GPIO_ACTIVE_HIGH>;
-			linux,default-trigger="default-off";
+			linux,default-trigger="heartbeat";
 		};
 	};
 
 	sound {
 		compatible = "simple-audio-card";
 		simple-audio-card,format = "i2s";
-		simple-audio-card,name = "rockchip,miniarm-codec";
+		simple-audio-card,name = "TinkerBoard";
 		simple-audio-card,mclk-fs = <512>;
 		simple-audio-card,cpu {
 			sound-dai = <&i2s>;
@@ -183,14 +183,14 @@
 	clock_in_out = "input";
 	snps,reset-gpio = <&gpio4 7 0>;
 	snps,reset-active-low;
-	snps,reset-delays-us = <0 10000 1000000>;
+	snps,reset-delays-us = <0 10000 50000>;
 	assigned-clocks = <&cru SCLK_MAC>;
 	assigned-clock-parents = <&ext_gmac>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&rgmii_pins>;
 	tx_delay = <0x30>;
 	rx_delay = <0x10>;
-	status = "ok";
+	status = "okay";
 };
 
 &dsi0 {
@@ -468,6 +468,7 @@
 
 &i2s {
 	#sound-dai-cells = <0>;
+	rockchip,bclk-fs = <128>;
 	status = "okay";
 };
 
