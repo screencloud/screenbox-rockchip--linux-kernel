@@ -72,6 +72,7 @@
 #include <drm/drm_mm.h>
 #include <drm/drm_os_linux.h>
 #include <drm/drm_sarea.h>
+#include <drm/drm_drv.h>
 #include <drm/drm_vma_manager.h>
 
 struct module;
@@ -407,6 +408,11 @@ struct drm_file {
 	struct idr object_idr;
 	/** Lock for synchronization of access to object_idr. */
 	spinlock_t table_lock;
+
+	/** @syncobj_idr: Mapping of sync object handles to object pointers. */
+	struct idr syncobj_idr;
+	/** @syncobj_table_lock: Protects @syncobj_idr. */
+	spinlock_t syncobj_table_lock;
 
 	struct file *filp;
 	void *driver_priv;

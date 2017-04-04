@@ -230,6 +230,9 @@ static int drm_open_helper(struct file *filp, struct drm_minor *minor)
 	if (drm_core_check_feature(dev, DRIVER_GEM))
 		drm_gem_open(dev, priv);
 
+	if (drm_core_check_feature(dev, DRIVER_SYNCOBJ))
+		drm_syncobj_open(priv);
+
 	if (drm_core_check_feature(dev, DRIVER_PRIME))
 		drm_prime_init_file_private(&priv->prime);
 
@@ -286,6 +289,8 @@ out_close:
 out_prime_destroy:
 	if (drm_core_check_feature(dev, DRIVER_PRIME))
 		drm_prime_destroy_file_private(&priv->prime);
+	if (drm_core_check_feature(dev, DRIVER_SYNCOBJ))
+		drm_syncobj_release(priv);
 	if (drm_core_check_feature(dev, DRIVER_GEM))
 		drm_gem_release(dev, priv);
 	put_pid(priv->pid);
@@ -440,6 +445,8 @@ int drm_release(struct inode *inode, struct file *filp)
 		drm_property_destroy_user_blobs(dev, file_priv);
 	}
 
+	if (drm_core_check_feature(dev, DRIVER_SYNCOBJ))
+		drm_syncobj_release(file_priv);
 	if (drm_core_check_feature(dev, DRIVER_GEM))
 		drm_gem_release(dev, file_priv);
 

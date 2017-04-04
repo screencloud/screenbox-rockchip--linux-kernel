@@ -127,4 +127,30 @@ static inline int drm_debugfs_connector_add(struct drm_connector *connector)
 static inline void drm_debugfs_connector_remove(struct drm_connector *connector)
 {
 }
+
+static inline int drm_debugfs_crtc_add(struct drm_crtc *crtc)
+{
+	return 0;
+}
+static inline void drm_debugfs_crtc_remove(struct drm_crtc *crtc)
+{
+}
+
+static inline int drm_debugfs_crtc_crc_add(struct drm_crtc *crtc)
+{
+	return 0;
+}
+
 #endif
+
+/* drm_syncobj.c */
+void drm_syncobj_open(struct drm_file *file_private);
+void drm_syncobj_release(struct drm_file *file_private);
+int drm_syncobj_create_ioctl(struct drm_device *dev, void *data,
+			     struct drm_file *file_private);
+int drm_syncobj_destroy_ioctl(struct drm_device *dev, void *data,
+			      struct drm_file *file_private);
+int drm_syncobj_handle_to_fd_ioctl(struct drm_device *dev, void *data,
+				   struct drm_file *file_private);
+int drm_syncobj_fd_to_handle_ioctl(struct drm_device *dev, void *data,
+				   struct drm_file *file_private);
