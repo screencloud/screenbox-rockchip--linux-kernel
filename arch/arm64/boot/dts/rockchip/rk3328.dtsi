@@ -692,7 +692,7 @@
 		interrupts = <GIC_SPI 74 IRQ_TYPE_LEVEL_HIGH>;
 		interrupt-names = "rkvdec_mmu";
 		clocks = <&cru ACLK_RKVDEC>, <&cru HCLK_RKVDEC>;
-		clock-names = "aclk_vcodec", "hclk_vcodec";
+		clock-names = "aclk", "hclk";
 		power-domains = <&power RK3328_PD_VIDEO>;
 		#iommu-cells = <0>;
 	};
@@ -790,6 +790,8 @@
 		reg = <0x0 0xff373f00 0x0 0x100>;
 		interrupts = <GIC_SPI 32 IRQ_TYPE_LEVEL_HIGH 0>;
 		interrupt-names = "vop_mmu";
+		clocks = <&cru ACLK_VOP>, <&cru HCLK_VOP>;
+		clock-names = "aclk", "hclk";
 		#iommu-cells = <0>;
 		status = "disabled";
 	};
