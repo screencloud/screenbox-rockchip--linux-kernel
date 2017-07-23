@@ -70,6 +70,20 @@
 		#clock-cells = <0>;
 	};
 
+	sdio_pwrseq: sdio-pwrseq {
+		compatible = "mmc-pwrseq-simple";
+		pinctrl-names = "default";
+		pinctrl-0 = <&wifi_enable_h>;
+
+		/*
+		 * On the module itself this is one of these (depending
+		 * on the actual card populated):
+		 * - SDIO_RESET_L_WL_REG_ON
+		 * - PDN (power down when low)
+		 */
+		reset-gpios = <&gpio1 18 GPIO_ACTIVE_LOW>;
+	};
+
 	sound {
 		compatible = "simple-audio-card";
 		simple-audio-card,format = "i2s";
@@ -87,7 +101,7 @@
 		compatible = "simple-audio-card";
 		simple-audio-card,format = "i2s";
 		simple-audio-card,mclk-fs = <128>;
-		simple-audio-card,name = "rockchip,hdmi";
+		simple-audio-card,name = "ROCK64";
 		simple-audio-card,cpu {
 			sound-dai = <&i2s0>;
 		};
@@ -98,7 +112,7 @@
 
 	spdif-sound {
 		compatible = "simple-audio-card";
-		simple-audio-card,name = "rockchip,spdif";
+		simple-audio-card,name = "SPDIF";
 		simple-audio-card,cpu {
 			sound-dai = <&spdif>;
 		};
@@ -188,6 +202,10 @@
 	#sound-dai-cells = <0>;
 	ddc-i2c-scl-high-time-ns = <9625>;
 	ddc-i2c-scl-low-time-ns = <10000>;
+	status = "okay";
+};
+
+&hdmiphy {
 	status = "okay";
 };
 

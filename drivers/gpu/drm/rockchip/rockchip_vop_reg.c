@@ -225,6 +225,19 @@ static const struct vop_ctrl rk3288_ctrl_data = {
 				     0, 3, 5, -1),
 	.afbdc_pic_size = VOP_REG_VER(RK3399_AFBCD0_PIC_SIZE, 0xffffffff,
 				      0, 3, 5, -1),
+	.cabc_config_mode = VOP_REG_VER(RK3399_CABC_CTRL0, 0x3, 1, 3, 5, -1),
+	.cabc_calc_pixel_num = VOP_REG_VER(RK3399_CABC_CTRL0, 0x7fffff, 4,
+					   3, 5, -1),
+	.cabc_handle_en = VOP_REG_VER(RK3399_CABC_CTRL0, 0x1, 3, 3, 5, -1),
+	.cabc_en = VOP_REG_VER(RK3399_CABC_CTRL0, 0x1, 0, 3, 5, -1),
+	.cabc_total_num = VOP_REG_VER(RK3399_CABC_CTRL1, 0x7fffff, 4, 3, 5, -1),
+	.cabc_lut_en = VOP_REG_VER(RK3399_CABC_CTRL1, 0x1, 0, 3, 5, -1),
+	.cabc_stage_up_mode = VOP_REG_VER(RK3399_CABC_CTRL2, 0x1, 19, 3, 5, -1),
+	.cabc_stage_up = VOP_REG_VER(RK3399_CABC_CTRL2, 0x1ff, 8, 3, 5, -1),
+	.cabc_stage_down = VOP_REG_VER(RK3399_CABC_CTRL2, 0xff, 0, 3, 5, -1),
+	.cabc_global_dn = VOP_REG_VER(RK3399_CABC_CTRL3, 0xff, 0, 3, 5, -1),
+	.cabc_global_dn_limit_en = VOP_REG_VER(RK3399_CABC_CTRL3, 0x1, 8,
+					       3, 5, -1),
 
 	.xmirror = VOP_REG(RK3288_DSP_CTRL0, 0x1, 22),
 	.ymirror = VOP_REG(RK3288_DSP_CTRL0, 0x1, 23),
@@ -242,9 +255,9 @@ static const struct vop_ctrl rk3288_ctrl_data = {
  */
 static const struct vop_win_data rk3288_vop_win_data[] = {
 	{ .base = 0x00, .phy = &rk3288_win01_data,
-	  .type = DRM_PLANE_TYPE_PRIMARY },
-	{ .base = 0x40, .phy = &rk3288_win01_data,
 	  .type = DRM_PLANE_TYPE_OVERLAY },
+	{ .base = 0x40, .phy = &rk3288_win01_data,
+	  .type = DRM_PLANE_TYPE_PRIMARY },
 	{ .base = 0x00, .phy = &rk3288_win23_data,
 	  .type = DRM_PLANE_TYPE_OVERLAY,
 	  .area = rk3288_area_data,
@@ -626,9 +639,9 @@ static const struct vop_intr rk3328_vop_intr = {
 
 static const struct vop_win_data rk3328_vop_win_data[] = {
 	{ .base = 0xd0, .phy = &rk3288_win01_data,
-	  .type = DRM_PLANE_TYPE_PRIMARY },
-	{ .base = 0x1d0, .phy = &rk3288_win01_data,
 	  .type = DRM_PLANE_TYPE_OVERLAY },
+	{ .base = 0x1d0, .phy = &rk3288_win01_data,
+	  .type = DRM_PLANE_TYPE_PRIMARY },
 	{ .base = 0x2d0, .phy = &rk3288_win01_data,
 	  .type = DRM_PLANE_TYPE_CURSOR },
 };

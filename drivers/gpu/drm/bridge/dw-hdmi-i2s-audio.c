@@ -11,6 +11,8 @@
 
 #include <sound/hdmi-codec.h>
 
+#include <drm/drm_crtc.h> /* This is only to get MAX_ELD_BYTES */
+
 #include "dw-hdmi.h"
 #include "dw-hdmi-audio.h"
 
@@ -185,7 +187,10 @@ static int dw_hdmi_i2s_hw_params(struct device *dev, void *data,
 	hdmi_write(audio, 0x00, HDMI_FC_AUDICONF1);
 
 	/* Set Channel Allocation */
-	hdmi_write(audio, 0x00, HDMI_FC_AUDICONF2);
+	val = hparms->cea.channel_allocation;
+	if (hparms->mode == NLPCM || hparms->mode == HBR)
+		val = 0x00;
+	hdmi_write(audio, val, HDMI_FC_AUDICONF2);
 
 	/* Set LFEPBLDOWN-MIX INH and LSV */
 	hdmi_write(audio, 0x00, HDMI_FC_AUDICONF3);
@@ -210,9 +215,19 @@ static void dw_hdmi_i2s_audio_shutdown(struct device *dev, void *data)
 	hdmi_write(audio, HDMI_AUD_CONF0_SW_RESET, HDMI_AUD_CONF0);
 }
 
+static int dw_hdmi_i2s_get_eld(struct device *dev, void *data, u8 *buf, size_t len)
+{
+	struct dw_hdmi_i2s_audio_data *audio = data;
+
+	memcpy(buf, audio->eld, min(len, (size_t)MAX_ELD_BYTES));
+
+	return 0;
+}
+
 static struct hdmi_codec_ops dw_hdmi_i2s_ops = {
 	.hw_params	= dw_hdmi_i2s_hw_params,
 	.audio_shutdown	= dw_hdmi_i2s_audio_shutdown,
+	.get_eld	= dw_hdmi_i2s_get_eld,
 };
 
 static int snd_dw_hdmi_probe(struct platform_device *pdev)
@@ -234,11 +249,23 @@ static int snd_dw_hdmi_probe(struct platform_device *pdev)
 	pdevinfo.size_data	= sizeof(pdata);
 	pdevinfo.dma_mask	= DMA_BIT_MASK(32);
 
-	return IS_ERR_OR_NULL(platform_device_register_full(&pdevinfo));
+	audio->pdev = platform_device_register_full(&pdevinfo);
+	return IS_ERR_OR_NULL(audio->pdev);
+}
+
+static int snd_dw_hdmi_remove(struct platform_device *pdev)
+{
+	struct dw_hdmi_i2s_audio_data *audio = pdev->dev.platform_data;
+
+	if (!IS_ERR_OR_NULL(audio->pdev))
+		platform_device_unregister(audio->pdev);
+
+	return 0;
 }
 
 static struct platform_driver snd_dw_hdmi_driver = {
 	.probe	= snd_dw_hdmi_probe,
+	.remove = snd_dw_hdmi_remove,
 	.driver	= {
 		.name = DRIVER_NAME,
 		.owner = THIS_MODULE,
