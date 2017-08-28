@@ -163,11 +163,25 @@ void drm_syncobj_replace_fence(struct drm_file *file_private,
 			       struct drm_syncobj *syncobj,
 			       struct dma_fence *fence)
 {
-	struct dma_fence *old_fence = NULL;
+	struct dma_fence *old_fence;
+	struct drm_syncobj_cb *cur, *tmp;
 
 	if (fence)
 		dma_fence_get(fence);
-	old_fence = xchg(&syncobj->fence, fence);
+
+	spin_lock(&syncobj->lock);
+
+	old_fence = syncobj->fence;
+	syncobj->fence = fence;
+
+	if (fence != old_fence) {
+		list_for_each_entry_safe(cur, tmp, &syncobj->cb_list, node) {
+			list_del_init(&cur->node);
+			cur->func(syncobj, cur);
+		}
+	}
+
+	spin_unlock(&syncobj->lock);
 
 	dma_fence_put(old_fence);
 }
@@ -203,7 +217,7 @@ void drm_syncobj_free(struct kref *kref)
 	struct drm_syncobj *syncobj = container_of(kref,
 						   struct drm_syncobj,
 						   refcount);
-	dma_fence_put(syncobj->fence);
+	drm_syncobj_replace_fence(syncobj, NULL);
 	kfree(syncobj);
 }
 EXPORT_SYMBOL(drm_syncobj_free);
@@ -219,6 +233,8 @@ static int drm_syncobj_create(struct drm_file *file_private,
 		return -ENOMEM;
 
 	kref_init(&syncobj->refcount);
+	INIT_LIST_HEAD(&syncobj->cb_list);
+	spin_lock_init(&syncobj->lock);
 
 	idr_preload(GFP_KERNEL);
 	spin_lock(&file_private->syncobj_table_lock);
