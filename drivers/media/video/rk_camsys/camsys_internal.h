@@ -30,7 +30,6 @@
 #include <linux/log2.h>
 #include <linux/gpio.h>
 #include <linux/rockchip/cpu.h>
-#include <linux/rockchip/iomap.h>
 #include <linux/rockchip/grf.h>
 #include <asm/uaccess.h>
 #include <linux/of.h>
@@ -175,8 +174,13 @@
 *v0.0x22.3:
 	1) switch TX1/RX1 D-PHY of rk3288/3399 to RX status before
 	it's initialization to avoid conflicting with sensor output.
+*v0.0x22.4:
+	1) enable SYS_STATUS_ISP status set.
+*v0.0x22.5:
+	1) gpio base start from 1000,adapt to it.
 */
-#define CAMSYS_DRIVER_VERSION                   KERNEL_VERSION(0, 0x22, 3)
+
+#define CAMSYS_DRIVER_VERSION                   KERNEL_VERSION(0, 0x22, 5)
 
 #define CAMSYS_PLATFORM_DRV_NAME                "RockChip-CamSys"
 #define CAMSYS_PLATFORM_MARVIN_NAME             "Platform_MarvinDev"

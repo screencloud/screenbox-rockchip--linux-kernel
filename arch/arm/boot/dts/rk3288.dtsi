@@ -1306,6 +1306,8 @@
 		interrupts = <GIC_SPI 19 IRQ_TYPE_LEVEL_HIGH>;
 		clocks = <&cru SCLK_MIPIDSI_24M>, <&cru PCLK_MIPI_DSI0>;
 		clock-names = "ref", "pclk";
+		resets = <&cru SRST_MIPIDSI0>;
+		reset-names = "apb";
 		power-domains = <&power RK3288_PD_VIO>;
 		rockchip,grf = <&grf>;
 		#address-cells = <1>;
@@ -1338,6 +1340,8 @@
 		interrupts = <GIC_SPI 20 IRQ_TYPE_LEVEL_HIGH>;
 		clocks = <&cru SCLK_MIPIDSI_24M>, <&cru PCLK_MIPI_DSI1>;
 		clock-names = "ref", "pclk";
+		resets = <&cru SRST_MIPIDSI1>;
+		reset-names = "apb";
 		power-domains = <&power RK3288_PD_VIO>;
 		rockchip,grf = <&grf>;
 		#address-cells = <1>;
@@ -1438,8 +1442,9 @@
 		interrupts = <GIC_SPI 103 IRQ_TYPE_LEVEL_HIGH>;
 		clocks = <&cru  PCLK_HDMI_CTRL>, <&cru SCLK_HDMI_HDCP>;
 		clock-names = "iahb", "isfr";
-		pinctrl-names = "default";
+		pinctrl-names = "default", "sleep";
 		pinctrl-0 = <&hdmi_ddc>;
+		pinctrl-1 = <&hdmi_gpio>;
 		power-domains = <&power RK3288_PD_VIO>;
 		status = "disabled";
 
@@ -1610,6 +1615,41 @@
 		reg = <0x0 0xffac0000 0x0 0x2000>;
 	};
 
+	nocp_core: nocp-core@ffac0400 {
+		compatible = "rockchip,rk3288-nocp";
+		reg = <0x0 0xffac0400 0x0 0x400>;
+	};
+
+	nocp_gpu: nocp-gpu@ffac0800 {
+		compatible = "rockchip,rk3288-nocp";
+		reg = <0x0 0xffac0800 0x0 0x400>;
+	};
+
+	nocp_peri: nocp-peri@ffac0c00 {
+		compatible = "rockchip,rk3288-nocp";
+		reg = <0x0 0xffac0c00 0x0 0x400>;
+	};
+
+	nocp_vpu: nocp-vpu@ffac1000 {
+		compatible = "rockchip,rk3288-nocp";
+		reg = <0x0 0xffac1000 0x0 0x400>;
+	};
+
+	nocp_vio0: nocp-vio0@ffac1400 {
+		compatible = "rockchip,rk3288-nocp";
+		reg = <0x0 0xffac1400 0x0 0x400>;
+	};
+
+	nocp_vio1: nocp-vio1@ffac1800 {
+		compatible = "rockchip,rk3288-nocp";
+		reg = <0x0 0xffac1800 0x0 0x400>;
+	};
+
+	nocp_vio2: nocp-vio2@ffac1c00 {
+		compatible = "rockchip,rk3288-nocp";
+		reg = <0x0 0xffac1c00 0x0 0x400>;
+	};
+
 	efuse: efuse@ffb40000 {
 		compatible = "rockchip,rockchip-efuse";
 		reg = <0x0 0xffb40000 0x0 0x20>;
@@ -1765,6 +1805,13 @@
 		};
 
 		hdmi {
+			hdmi_gpio: hdmi-gpio {
+				rockchip,pins = <7 19 RK_FUNC_GPIO
+						 &pcfg_pull_none>,
+						<7 20 RK_FUNC_GPIO
+						 &pcfg_pull_none>;
+			};
+
 			hdmi_ddc: hdmi-ddc {
 				rockchip,pins = <7 19 RK_FUNC_2 &pcfg_pull_none>,
 						<7 20 RK_FUNC_2 &pcfg_pull_none>;
@@ -1860,8 +1907,11 @@
 						<6 1 RK_FUNC_1 &pcfg_pull_none>,
 						<6 2 RK_FUNC_1 &pcfg_pull_none>,
 						<6 3 RK_FUNC_1 &pcfg_pull_none>,
-						<6 4 RK_FUNC_1 &pcfg_pull_none>,
-						<6 8 RK_FUNC_1 &pcfg_pull_none>;
+						<6 4 RK_FUNC_1 &pcfg_pull_none>;
+			};
+
+			i2s0_mclk: i2s0-mclk {
+				rockchip,pins = <6 8 RK_FUNC_1 &pcfg_pull_none>;
 			};
 		};
 
@@ -2313,6 +2363,7 @@
 			|RKPM_CTR_GTCLKS
 			|RKPM_CTR_PLLS
 			|RKPM_CTR_ARMOFF_LPMD
+			|RKPM_CTR_SYSCLK_OSC_DIS
 			)
 		>;
 		rockchip,wakeup-config = <

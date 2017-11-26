@@ -898,12 +898,19 @@ static struct rockchip_mux_route_data rk3328_mux_route_data[] = {
 		.route_offset = 0x50,
 		.route_val = BIT(16) | BIT(16 + 1) | BIT(0),
 	}, {
-		/* gmac-m1-optimized_rxd0 */
+		/* gmac-m1_rxd0 */
 		.bank_num = 1,
 		.pin = 11,
 		.func = 2,
 		.route_offset = 0x50,
-		.route_val = BIT(16 + 2) | BIT(16 + 10) | BIT(2) | BIT(10),
+		.route_val = BIT(16 + 2) | BIT(2),
+	}, {
+		/* gmac-m1-optimized_rxd3 */
+		.bank_num = 1,
+		.pin = 14,
+		.func = 2,
+		.route_offset = 0x50,
+		.route_val = BIT(16 + 10) | BIT(10),
 	}, {
 		/* pdm_sdi0m0 */
 		.bank_num = 2,
@@ -2208,11 +2215,11 @@ static int rockchip_pmx_gpio_set_direction(struct pinctrl_dev *pctldev,
 	int pin;
 
 	chip = range->gc;
-	pin = offset - chip->base;
+	pin = offset - range->pin_base;
 	dev_dbg(info->dev, "gpio_direction for pin %u as %s-%d to %s\n",
 		 offset, range->name, pin, input ? "input" : "output");
 
-	return _rockchip_pmx_gpio_set_direction(chip, offset - chip->base,
+	return _rockchip_pmx_gpio_set_direction(chip, pin,
 						input);
 }
 
@@ -3014,7 +3021,7 @@ static int rockchip_gpiolib_register(struct platform_device *pdev,
 		bank->gpio_chip = rockchip_gpiolib_chip;
 
 		gc = &bank->gpio_chip;
-		gc->base = bank->pin_base;
+		gc->base = ARCH_GPIO_BASE + bank->pin_base;
 		gc->ngpio = bank->nr_pins;
 		gc->dev = &pdev->dev;
 		gc->of_node = bank->of_node;
@@ -3661,8 +3668,8 @@ static struct rockchip_pin_bank rk3399_pin_banks[] = {
 							 DRV_TYPE_IO_1V8_ONLY,
 							 DRV_TYPE_IO_DEFAULT,
 							 DRV_TYPE_IO_DEFAULT,
-							 0x0,
-							 0x8,
+							 0x80,
+							 0x88,
 							 -1,
 							 -1,
 							 PULL_TYPE_IO_1V8_ONLY,
@@ -3677,10 +3684,10 @@ static struct rockchip_pin_bank rk3399_pin_banks[] = {
 					      DRV_TYPE_IO_1V8_OR_3V0,
 					      DRV_TYPE_IO_1V8_OR_3V0,
 					      DRV_TYPE_IO_1V8_OR_3V0,
-					      0x20,
-					      0x28,
-					      0x30,
-					      0x38
+					      0xa0,
+					      0xa8,
+					      0xb0,
+					      0xb8
 					      ),
 	PIN_BANK_DRV_FLAGS_PULL_FLAGS(2, 32, "gpio2", DRV_TYPE_IO_1V8_OR_3V0,
 				      DRV_TYPE_IO_1V8_OR_3V0,

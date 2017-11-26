@@ -34,6 +34,7 @@
 #include <linux/fence.h>
 #include <linux/console.h>
 #include <linux/iommu.h>
+#include <linux/of_reserved_mem.h>
 
 #include <drm/rockchip_drm.h>
 
@@ -215,7 +216,7 @@ static int init_loader_memory(struct drm_device *drm_dev)
 	struct resource res;
 	int i, ret;
 
-	node = of_parse_phandle(np, "memory-region", 0);
+	node = of_parse_phandle(np, "logo-memory-region", 0);
 	if (!node)
 		return -ENOMEM;
 
@@ -407,6 +408,7 @@ int setup_initial_state(struct drm_device *drm_dev,
 			struct drm_atomic_state *state,
 			struct rockchip_drm_mode_set *set)
 {
+	struct rockchip_drm_private *priv = drm_dev->dev_private;
 	struct drm_connector *connector = set->connector;
 	struct drm_crtc *crtc = set->crtc;
 	struct drm_crtc_state *crtc_state;
@@ -415,6 +417,7 @@ int setup_initial_state(struct drm_device *drm_dev,
 	struct drm_display_mode *mode = NULL;
 	const struct drm_connector_helper_funcs *funcs;
 	const struct drm_encoder_helper_funcs *encoder_funcs;
+	int pipe = drm_crtc_index(crtc);
 	bool is_crtc_enabled = true;
 	int hdisplay, vdisplay;
 	int fb_width, fb_height;
@@ -496,6 +499,10 @@ int setup_initial_state(struct drm_device *drm_dev,
 			goto error;
 
 		crtc_state->active = true;
+
+		if (priv->crtc_funcs[pipe] &&
+		    priv->crtc_funcs[pipe]->loader_protect)
+			priv->crtc_funcs[pipe]->loader_protect(crtc, true);
 	}
 
 	if (!set->fb) {
@@ -550,6 +557,10 @@ error:
 	if (encoder_funcs->loader_protect)
 		encoder_funcs->loader_protect(conn_state->best_encoder, false);
 	conn_state->best_encoder->loader_protect = false;
+	if (priv->crtc_funcs[pipe] &&
+	    priv->crtc_funcs[pipe]->loader_protect)
+		priv->crtc_funcs[pipe]->loader_protect(crtc, false);
+
 	return ret;
 }
 
@@ -588,12 +599,9 @@ static int update_state(struct drm_device *drm_dev,
 		const struct drm_encoder_helper_funcs *encoder_helper_funcs;
 		const struct drm_connector_helper_funcs *connector_helper_funcs;
 		struct drm_encoder *encoder;
-		int pipe = drm_crtc_index(crtc);
 
 		connector_helper_funcs = connector->helper_private;
-		if (!priv->crtc_funcs[pipe] ||
-		    !priv->crtc_funcs[pipe]->loader_protect ||
-		    !connector_helper_funcs ||
+		if (!connector_helper_funcs ||
 		    !connector_helper_funcs->best_encoder)
 			return -ENXIO;
 		encoder = connector_helper_funcs->best_encoder(connector);
@@ -608,7 +616,6 @@ static int update_state(struct drm_device *drm_dev,
 			return ret;
 		if (encoder_helper_funcs->mode_set)
 			encoder_helper_funcs->mode_set(encoder, mode, mode);
-		priv->crtc_funcs[pipe]->loader_protect(crtc, true);
 	}
 
 	primary_state = drm_atomic_get_plane_state(state, crtc->primary);
@@ -690,6 +697,13 @@ static void show_loader_logo(struct drm_device *drm_dev)
 		goto err_free_state;
 	}
 
+	/*
+	 * The state save initial devices status, swap the state into
+	 * drm deivces as old state, so if new state come, can compare
+	 * with this state to judge which status need to update.
+	 */
+	drm_atomic_helper_swap_state(drm_dev, state);
+	drm_atomic_state_free(state);
 	old_state = drm_atomic_helper_duplicate_state(drm_dev,
 						      mode_config->acquire_ctx);
 	if (IS_ERR(old_state)) {
@@ -698,13 +712,6 @@ static void show_loader_logo(struct drm_device *drm_dev)
 		goto err_free_state;
 	}
 
-	/*
-	 * The state save initial devices status, swap the state into
-	 * drm deivces as old state, so if new state come, can compare
-	 * with this state to judge which status need to update.
-	 */
-	drm_atomic_helper_swap_state(drm_dev, state);
-	drm_atomic_state_free(state);
 	state = drm_atomic_helper_duplicate_state(drm_dev,
 						  mode_config->acquire_ctx);
 	if (IS_ERR(state)) {
@@ -754,6 +761,7 @@ err_unlock:
 	drm_modeset_unlock_all(drm_dev);
 	if (ret)
 		dev_err(drm_dev->dev, "failed to show loader logo\n");
+	rockchip_free_loader_memory(drm_dev);
 }
 
 static const char *const loader_protect_clocks[] __initconst = {
@@ -1013,6 +1021,8 @@ static struct drm_info_list rockchip_debugfs_files[] = {
 static int rockchip_drm_debugfs_init(struct drm_minor *minor)
 {
 	struct drm_device *dev = minor->dev;
+	struct rockchip_drm_private *priv = dev->dev_private;
+	struct drm_crtc *crtc;
 	int ret;
 
 	ret = drm_debugfs_create_files(rockchip_debugfs_files,
@@ -1022,6 +1032,14 @@ static int rockchip_drm_debugfs_init(struct drm_minor *minor)
 	if (ret) {
 		dev_err(dev->dev, "could not install rockchip_debugfs_list\n");
 		return ret;
+	}
+
+	drm_for_each_crtc(crtc, dev) {
+		int pipe = drm_crtc_index(crtc);
+
+		if (priv->crtc_funcs[pipe] &&
+		    priv->crtc_funcs[pipe]->debugfs_init)
+			priv->crtc_funcs[pipe]->debugfs_init(minor, crtc);
 	}
 
 	return 0;
@@ -1078,6 +1096,17 @@ static int rockchip_drm_create_properties(struct drm_device *dev)
 	if (!prop)
 		return -ENOMEM;
 	private->cabc_calc_pixel_num_property = prop;
+	prop = drm_property_create_range(dev, DRM_MODE_PROP_ATOMIC,
+					 "EOTF", 0, 5);
+	if (!prop)
+		return -ENOMEM;
+	private->eotf_prop = prop;
+
+	prop = drm_property_create_range(dev, DRM_MODE_PROP_ATOMIC,
+					 "COLOR_SPACE", 0, 12);
+	if (!prop)
+		return -ENOMEM;
+	private->color_space_prop = prop;
 
 	return drm_mode_create_tv_properties(dev, 0, NULL);
 }
@@ -1218,8 +1247,8 @@ static int rockchip_drm_bind(struct device *dev)
 		goto err_free;
 	}
 
-	mutex_init(&private->commit.lock);
-	INIT_WORK(&private->commit.work, rockchip_drm_atomic_work);
+	mutex_init(&private->commit_lock);
+	INIT_WORK(&private->commit_work, rockchip_drm_atomic_work);
 
 	drm_dev->dev_private = private;
 
@@ -1296,6 +1325,9 @@ static int rockchip_drm_bind(struct device *dev)
 #ifndef MODULE
 	show_loader_logo(drm_dev);
 #endif
+	ret = of_reserved_mem_device_init(drm_dev->dev);
+	if (ret)
+		DRM_DEBUG_KMS("No reserved memory region assign to drm\n");
 
 	ret = rockchip_drm_fbdev_init(drm_dev);
 	if (ret)

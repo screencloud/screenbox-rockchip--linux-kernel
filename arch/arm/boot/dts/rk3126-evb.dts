@@ -39,14 +39,36 @@
  */
 
 /dts-v1/;
-#include "rk3126.dtsi"
 #include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
 #include <dt-bindings/pinctrl/rockchip.h>
 #include <dt-bindings/pwm/pwm.h>
+#include "rk3126.dtsi"
+#include "rk312x-android.dtsi"
 
 / {
 	model = "Rockchip RK3126 Evaluation board";
 	compatible = "rockchip,rk3126";
+
+	adc-keys {
+		compatible = "adc-keys";
+		io-channels = <&saradc 2>;
+		io-channel-names = "buttons";
+		poll-interval = <100>;
+		keyup-threshold-microvolt = <3300000>;
+
+		button-up {
+			label = "Volume Up";
+			linux,code = <KEY_VOLUMEUP>;
+			press-threshold-microvolt = <0>;
+		};
+
+		button-down {
+			label = "Volume Down";
+			linux,code = <KEY_VOLUMEDOWN>;
+			press-threshold-microvolt = <1650000>;
+		};
+	};
 
 	backlight: backlight {
 		compatible = "pwm-backlight";
@@ -88,10 +110,6 @@
 		enable-gpios = <&gpio2 RK_PB2 GPIO_ACTIVE_HIGH>;
 	};
 
-	chosen {
-		bootargs = "console=uart8250,mmio32,0x20068000";
-	};
-
 	lvds_panel: lvds-panel {
 		status = "disabled";
 		ports {
@@ -101,15 +119,13 @@
 		};
 	};
 
-	reserved-memory {
-		#address-cells = <1>;
-		#size-cells = <1>;
-		ranges;
-
-		drm_logo: drm-logo@00000000 {
-			compatible = "rockchip,drm-logo";
-			reg = <0x0 0x0>;
-		};
+	vccadc_ref: vccadc-ref {
+		compatible = "regulator-fixed";
+		regulator-name = "SARADC_AVDD33";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
 	};
 
 	vcc_sys: vcc-sys {
@@ -121,20 +137,38 @@
 	};
 };
 
+&cpu0 {
+	cpu-supply = <&vdd_arm>;
+};
+
 &display_subsystem {
 	status = "okay";
-
-	memory-region = <&drm_logo>;
 	route {
 		route_lvds: route-lvds {
 			status = "okay";
-			logo,uboot = "logo.bmp";
-			logo,kernel = "logo_kernel.bmp";
-			logo,mode = "center";
-			charge_logo,mode = "center";
-			connect = <&vop_out_lvds>;
 		};
 	};
+};
+
+&dmc {
+	center-supply = <&vdd_log>;
+};
+
+&emmc {
+	bus-width = <8>;
+	cap-mmc-highspeed;
+	supports-emmc;
+	disable-wp;
+	non-removable;
+	num-slots = <1>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&emmc_clk &emmc_cmd &emmc_bus8>;
+	status = "okay";
+};
+
+&gpu {
+	status = "okay";
+	mali-supply = <&vdd_log>;
 };
 
 &i2c2 {
@@ -154,6 +188,8 @@
 		#gpio-cells = <2>;
 		#clock-cells = <1>;
 		clock-output-names = "xin32k", "rk816-clkout2";
+		extcon = <&u2phy>;
+
 		vcc1-supply = <&vcc_sys>;
 		vcc2-supply = <&vcc_sys>;
 		vcc3-supply = <&vcc_sys>;
@@ -173,30 +209,56 @@
 			status = "okay";
 		};
 
+		battery {
+			compatible = "rk816-battery";
+			ocv_table = <3400 3654 3686 3710 3744 3775 3803
+				     3825 3843 3858 3870 3886 3916 3955
+				     3988 4010 4023 4032 4049 4080 4151>;
+			design_capacity = <2000>;
+			design_qmax = <2200>;
+			bat_res = <120>;
+			max_input_current = <2000>;
+			max_chrg_current = <1000>;
+			max_chrg_voltage = <4200>;
+			sleep_enter_current = <300>;
+			sleep_exit_current = <300>;
+			sleep_filter_current = <100>;
+			power_off_thresd = <3500>;
+			zero_algorithm_vol = <3800>;
+			fb_temperature = <105>;
+			max_soc_offset = <60>;
+			monitor_sec = <5>;
+			virtual_power = <0>;
+			energy_mode = <0>;
+			power_dc2otg = <0>;
+			dc_det_adc = <0>;
+		};
+
 		regulators {
 
 			vdd_arm: DCDC_REG1{
 				regulator-name= "vdd_arm";
 				regulator-min-microvolt = <750000>;
 				regulator-max-microvolt = <1500000>;
+				regulator-ramp-delay = <6001>;
 				regulator-always-on;
 				regulator-boot-on;
 				regulator-state-mem {
-						regulator-state-disabled;
-						regulator-state-uv = <900000>;
-					};
+					regulator-on-in-suspend;
+					regulator-suspend-microvolt = <900000>;
 				};
+			};
 
 			vdd_log: DCDC_REG2 {
 				regulator-name= "vdd_logic";
 				regulator-min-microvolt = <750000>;
 				regulator-max-microvolt = <1500000>;
+				regulator-ramp-delay = <6001>;
 				regulator-always-on;
 				regulator-boot-on;
 				regulator-state-mem {
-					regulator-state-enabled;
-					regulator-mode = <0x2>;
-					regulator-state-uv = <1000000>;
+					regulator-on-in-suspend;
+					regulator-suspend-microvolt = <1000000>;
 				};
 			};
 
@@ -213,9 +275,8 @@
 				regulator-always-on;
 				regulator-boot-on;
 				regulator-state-mem {
-					regulator-state-enabled;
-					regulator-mode = <0x2>;
-					regulator-state-uv = <3000000>;
+					regulator-on-in-suspend;
+					regulator-suspend-microvolt = <3000000>;
 				};
 			};
 
@@ -226,8 +287,7 @@
 				regulator-always-on;
 				regulator-boot-on;
 				regulator-state-mem {
-					regulator-state-disabled;
-					regulator-state-uv = <2800000>;
+					regulator-off-in-suspend;
 				};
 			};
 
@@ -238,8 +298,7 @@
 				regulator-always-on;
 				regulator-boot-on;
 				regulator-state-mem {
-					regulator-state-disabled;
-					regulator-state-uv = <1800000>;
+					regulator-off-in-suspend;
 				};
 			};
 
@@ -250,9 +309,8 @@
 				regulator-always-on;
 				regulator-boot-on;
 				regulator-state-mem {
-					regulator-state-enabled;
-					regulator-mode = <0x2>;
-					regulator-state-uv = <1100000>;
+					regulator-on-in-suspend;
+					regulator-suspend-microvolt = <1100000>;
 				};
 			};
 
@@ -263,8 +321,7 @@
 				regulator-always-on;
 				regulator-boot-on;
 				regulator-state-mem {
-					regulator-state-disabled;
-					regulator-state-uv = <3300000>;
+					regulator-off-in-suspend;
 				};
 			};
 
@@ -275,8 +332,7 @@
 				regulator-always-on;
 				regulator-boot-on;
 				regulator-state-mem {
-					regulator-state-disabled;
-					regulator-state-uv = <3000000>;
+					regulator-off-in-suspend;
 				};
 			};
 
@@ -285,9 +341,8 @@
 				regulator-min-microvolt = <3300000>;
 				regulator-max-microvolt = <3300000>;
 				regulator-state-mem {
-					regulator-state-enabled;
-					regulator-mode = <0x2>;
-					regulator-state-uv = <3300000>;
+					regulator-on-in-suspend;
+					regulator-suspend-microvolt = <3300000>;
 				};
 			};
 		};
@@ -376,7 +431,7 @@
 	pmic {
 		pmic_int_l: pmic-int-l {
 			rockchip,pins =
-				<0 2 RK_FUNC_GPIO &pcfg_pull_none>;
+				<0 2 RK_FUNC_GPIO &pcfg_pull_default>;
 		};
 	};
 };
@@ -385,7 +440,49 @@
 	status = "okay";
 };
 
-&uart2 {
+&rga {
+	status = "okay";
+};
+
+&saradc {
+	status = "okay";
+	vref-supply = <&vccadc_ref>;
+};
+
+&sdmmc {
+	cap-mmc-highspeed;
+	supports-sd;
+	broken-cd;
+	card-detect-delay = <800>;
+	ignore-pm-notify;
+	keep-power-in-suspend;
+	cd-gpios = <&gpio1 10 GPIO_ACTIVE_HIGH>; /* CD GPIO */
+	status = "disabled";
+};
+
+&sdio {
+	cap-mmc-highspeed;
+	supports-sdio;
+	ignore-pm-notify;
+	keep-power-in-suspend;
+	non-removable;
+	cap-sdio-irq;
+	status = "disabled";
+};
+
+&u2phy {
+	status = "okay";
+
+	u2phy_otg: otg-port {
+		status = "okay";
+	};
+
+	u2phy_host: host-port {
+		status = "okay";
+	};
+};
+
+&usb_otg {
 	status = "okay";
 };
 

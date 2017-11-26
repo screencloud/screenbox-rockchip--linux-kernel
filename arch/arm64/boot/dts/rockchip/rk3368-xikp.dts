@@ -590,6 +590,8 @@
 		clock-names = "mclk";
 		spk-con-gpio = <&gpio3 9 GPIO_ACTIVE_HIGH>;
 		hp-det-gpio = <&gpio0 23 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&i2s_8ch_mclk>;
 	};
 };
 
@@ -604,6 +606,7 @@
 		max-x = <1920>;
 		max-y = <1200>;
 		tp-size = <89>;
+		configfile-num = <1>;
 		status = "okay";
 		tp-supply = <&vcc_tp>;
 	};
@@ -633,15 +636,27 @@
 		mpu-debug = <1>;
 	};
 
+	sensor@4c {
+		status = "okay";
+		compatible = "gs_mc3230";
+		reg = <0x4c>;
+		type = <SENSOR_TYPE_ACCEL>;
+		irq_enable = <0>;
+		poll_delay_ms = <30>;
+		layout = <4>;
+		reprobe_en = <1>;
+	};
+
 	sensor@19 {
 		status = "okay";
 		compatible = "gs_lis3dh";
 		reg = <0x19>;
 		type = <SENSOR_TYPE_ACCEL>;
 		irq-gpio = <&gpio3 14 IRQ_TYPE_LEVEL_LOW>;
-		irq_enable = <1>;
+		irq_enable = <0>;
 		poll_delay_ms = <30>;
 		layout = <6>;
+		reprobe_en = <1>;
 	};
 
 	sensor@10 {
