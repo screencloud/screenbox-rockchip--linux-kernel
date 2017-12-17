@@ -71,14 +71,14 @@
 				compatible = "android,fstab";
 				system {
 					compatible = "android,system";
-					dev = "/dev/block/platform/ff520000.rksdmmc/by-name/system";
+					dev = "/dev/block/platform/ff520000.dwmmc/by-name/system";
 					type = "ext4";
 					mnt_flags = "ro,barrier=1,inode_readahead_blks=8";
 					fsmgr_flags = "wait,verify";
 				};
 				vendor {
 					compatible = "android,vendor";
-					dev = "/dev/block/platform/ff520000.rksdmmc/by-name/vendor";
+					dev = "/dev/block/platform/ff520000.dwmmc/by-name/vendor";
 					type = "ext4";
 					mnt_flags = "ro,barrier=1,inode_readahead_blks=8";
 					fsmgr_flags = "wait,verify";
@@ -134,6 +134,17 @@
 		};
 	};
 
+	reserved-memory {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		drm_logo: drm-logo@00000000 {
+			compatible = "rockchip,drm-logo";
+			reg = <0x0 0x0 0x0 0x0>;
+		};
+	};
+
 	spdif-sound {
 		compatible = "simple-audio-card";
 		simple-audio-card,name = "rockchip,spdif";
@@ -168,6 +179,19 @@
 		vin-supply = <&vcc_io>;
 	};
 
+	wireless-bluetooth {
+		compatible = "bluetooth-platdata";
+		clocks = <&rk805 1>;
+		clock-names = "ext_clock";
+		uart_rts_gpios = <&gpio1 10 GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default", "rts_gpio";
+		pinctrl-0 = <&uart0_rts>;
+		pinctrl-1 = <&uart0_gpios>;
+		BT,power_gpio = <&gpio1 21 GPIO_ACTIVE_HIGH>;
+		BT,wake_host_irq = <&gpio1 26 GPIO_ACTIVE_HIGH>;
+		status = "okay";
+	};
+
 	wireless-wlan {
 		compatible = "wlan-platdata";
 		rockchip,grf = <&grf>;
@@ -188,7 +212,19 @@
 };
 
 &display_subsystem {
+	logo-memory-region = <&drm_logo>;
 	status = "okay";
+
+	route {
+		route_hdmi: route-hdmi {
+			status = "okay";
+			logo,uboot = "logo.bmp";
+			logo,kernel = "logo_kernel.bmp";
+			logo,mode = "center";
+			charge_logo,mode = "center";
+			connect = <&vop_out_hdmi>;
+		};
+	};
 };
 
 &emmc {
@@ -264,7 +300,7 @@
 		clock-output-names = "xin32k", "rk805-clkout2";
 
 		rtc {
-			status = "disabled";
+			status = "okay";
 		};
 
 		pwrkey {
@@ -424,6 +460,13 @@
 			<1 18 RK_FUNC_GPIO &pcfg_pull_none>;
 		};
 	};
+
+	wireless-bluetooth {
+		uart0_gpios: uart0-gpios {
+		rockchip,pins =
+			<1 10 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+	};
 };
 
 &pwm3 {
@@ -477,7 +520,7 @@
 			<0xe7	KEY_POWER>,
 			<0xfc	KEY_POWER>,
 			<0xa9	KEY_VOLUMEDOWN>,
-			<0xa8	KEY_VOLUMEDOWN>,
+			<0xa8	KEY_PLAYPAUSE>,
 			<0xe0	KEY_VOLUMEDOWN>,
 			<0xa5	KEY_VOLUMEDOWN>,
 			<0xab	183>,
@@ -492,6 +535,7 @@
 			<0xf2	KEY_VOLUMEDOWN>,
 			<0xf3	KEY_SEARCH>,
 			<0xb4	KEY_VOLUMEDOWN>,
+			<0xa4	KEY_SETUP>,
 			<0xbe	KEY_SEARCH>;
 	};
 
@@ -528,7 +572,17 @@
 	};
 };
 
+&rga {
+	status = "okay";
+};
+
 &rkvdec {
+	status = "okay";
+};
+
+&uart0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart0_xfer &uart0_cts>;
 	status = "okay";
 };
 
@@ -545,6 +599,7 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&sdmmc1_bus4 &sdmmc1_cmd &sdmmc1_clk>;
 	supports-sdio;
+	sd-uhs-sdr104;
 	status = "okay";
 };
 
@@ -564,6 +619,8 @@
 
 &spdif {
 	#sound-dai-cells = <0>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&spdifm0_tx>;
 	status = "okay";
 };
 

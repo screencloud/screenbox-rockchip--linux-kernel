@@ -46,6 +46,7 @@
 #include <dt-bindings/soc/rockchip,boot-mode.h>
 #include <dt-bindings/clock/rk3128-cru.h>
 #include <dt-bindings/display/media-bus-format.h>
+#include <dt-bindings/thermal/thermal.h>
 
 / {
 	interrupt-parent = <&gic>;
@@ -72,6 +73,8 @@
 			reg = <0xf00>;
 			operating-points-v2 = <&cpu0_opp_table>;
 			clocks = <&cru ARMCLK>;
+			#cooling-cells = <2>; /* min followed by max */
+			dynamic-power-coefficient = <120>;
 		};
 		cpu1: cpu@f01 {
 			device_type = "cpu";
@@ -97,9 +100,15 @@
 		compatible = "operating-points-v2";
 		opp-shared;
 
+		rockchip,leakage-scaling-sel = <
+			1   13   18
+			14  254  0
+		>;
+		clocks = <&cru PLL_APLL>;
 		rockchip,leakage-voltage-sel = <
-			1   18   0
-			18  254  1
+			1   13   0
+			14  18   1
+			18  254  2
 		>;
 		nvmem-cells = <&cpu_leakage>;
 		nvmem-cell-names = "cpu_leakage";
@@ -109,6 +118,7 @@
 			opp-microvolt = <950000>;
 			opp-microvolt-L0 = <950000>;
 			opp-microvolt-L1 = <950000>;
+			opp-microvolt-L2 = <950000>;
 			clock-latency-ns = <40000>;
 		};
 		opp-408000000 {
@@ -116,42 +126,48 @@
 			opp-microvolt = <950000>;
 			opp-microvolt-L0 = <950000>;
 			opp-microvolt-L1 = <950000>;
+			opp-microvolt-L2 = <950000>;
 			clock-latency-ns = <40000>;
 		};
 		opp-600000000 {
 			opp-hz = /bits/ 64 <600000000>;
-			opp-microvolt = <1025000>;
-			opp-microvolt-L0 = <1025000>;
-			opp-microvolt-L1 = <975000>;
+			opp-microvolt = <1075000>;
+			opp-microvolt-L0 = <1075000>;
+			opp-microvolt-L1 = <1025000>;
+			opp-microvolt-L2 = <975000>;
 			clock-latency-ns = <40000>;
 		};
 		opp-696000000 {
 			opp-hz = /bits/ 64 <696000000>;
-			opp-microvolt = <1100000>;
-			opp-microvolt-L0 = <1100000>;
-			opp-microvolt-L1 = <1050000>;
+			opp-microvolt = <1150000>;
+			opp-microvolt-L0 = <1150000>;
+			opp-microvolt-L1 = <1100000>;
+			opp-microvolt-L2 = <1050000>;
 			clock-latency-ns = <40000>;
 		};
 		opp-816000000 {
 			opp-hz = /bits/ 64 <816000000>;
-			opp-microvolt = <1150000>;
-			opp-microvolt-L0 = <1150000>;
-			opp-microvolt-L1 = <1100000>;
+			opp-microvolt = <1200000>;
+			opp-microvolt-L0 = <1200000>;
+			opp-microvolt-L1 = <1150000>;
+			opp-microvolt-L2 = <1100000>;
 			clock-latency-ns = <40000>;
 			opp-suspend;
 		};
 		opp-1008000000 {
 			opp-hz = /bits/ 64 <1008000000>;
-			opp-microvolt = <1275000>;
-			opp-microvolt-L0 = <1275000>;
-			opp-microvolt-L1 = <1225000>;
+			opp-microvolt = <1325000>;
+			opp-microvolt-L0 = <1325000>;
+			opp-microvolt-L1 = <1275000>;
+			opp-microvolt-L2 = <1225000>;
 			clock-latency-ns = <40000>;
 		};
 		opp-1200000000 {
 			opp-hz = /bits/ 64 <1200000000>;
 			opp-microvolt = <1425000>;
 			opp-microvolt-L0 = <1425000>;
-			opp-microvolt-L1 = <1375000>;
+			opp-microvolt-L1 = <1425000>;
+			opp-microvolt-L2 = <1375000>;
 			clock-latency-ns = <40000>;
 		};
 	};
@@ -200,6 +216,56 @@
 		interrupts = <GIC_PPI 13 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_HIGH)>,
 			     <GIC_PPI 14 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_HIGH)>;
 		clock-frequency = <24000000>;
+	};
+
+	thermal-zones {
+		soc_thermal: soc-thermal {
+			polling-delay-passive = <1000>;
+			polling-delay = <2000>;
+			sustainable-power = <200>;
+
+			thermal-sensors = <&tsadc 0>;
+
+			trips {
+				threshold: trip-point0 {
+					temperature = <80000>;
+					hysteresis = <2000>;
+					type = "passive";
+				};
+				target: trip-point1 {
+					temperature = <90000>;
+					hysteresis = <2000>;
+					type = "passive";
+				};
+				soc_crit: soc-crit {
+					temperature = <100000>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+
+			cooling-maps {
+				map0 {
+					trip = <&target>;
+					cooling-device = <&cpu0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
+					contribution = <1024>;
+				};
+				map1 {
+					trip = <&target>;
+					cooling-device = <&gpu THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
+					contribution = <1024>;
+				};
+			};
+		};
+
+	};
+
+	tsadc: tsadc {
+		compatible = "rockchip,rk3126-tsadc-virtual";
+		nvmem-cells = <&cpu_leakage>;
+		nvmem-cell-names = "cpu_leakage";
+		#thermal-sensor-cells = <1>;
+		status = "disabled";
 	};
 
 	xin24m: oscillator {
@@ -272,6 +338,10 @@
 		opp-400000000 {
 			opp-hz = /bits/ 64 <400000000>;
 			opp-microvolt = <1150000>;
+		};
+		opp-480000000 {
+			opp-hz = /bits/ 64 <480000000>;
+			opp-microvolt = <1250000>;
 		};
 	};
 
@@ -405,7 +475,7 @@
 		reg = <0x1010a000 0x200>;
 		interrupts = <GIC_SPI 8 IRQ_TYPE_LEVEL_HIGH>;
 		clocks = <&cru ACLK_CIF>, <&cru HCLK_CIF>,
-				<&cru SCLK_CIF_SRC>, <&cru SCLK_CIF_OUT_SRC>;
+				<&cru SCLK_CIF_SRC>, <&cru SCLK_CIF_OUT>;
 		clock-names = "aclk_cif0", "hclk_cif0",
 				"cif0_in", "cif0_out";
 		resets = <&cru SRST_CIF0>;
@@ -671,6 +741,22 @@
 		clocks = <&cru SCLK_NANDC>, <&cru HCLK_NANDC>;
 		clock-names = "clk_nandc", "hclk_nandc";
 		status = "disabled";
+	};
+
+	cru: clock-controller@20000000 {
+		compatible = "rockchip,rk3128-cru";
+		reg = <0x20000000 0x1000>;
+		rockchip,grf = <&grf>;
+		#clock-cells = <1>;
+		#reset-cells = <1>;
+		assigned-clocks = <&cru PLL_GPLL>, <&cru PLL_CPLL>,
+				  <&cru ACLK_CPU>, <&cru HCLK_CPU>,
+				  <&cru PCLK_CPU>, <&cru ACLK_PERI>,
+				  <&cru HCLK_PERI>, <&cru PCLK_PERI>;
+		assigned-clock-rates = <594000000>, <400000000>,
+				       <300000000>, <150000000>,
+				       <75000000>, <300000000>,
+				       <150000000>, <75000000>;
 	};
 
 	grf: syscon@20008000 {
@@ -1127,7 +1213,7 @@
 		uart1 {
 			uart1_xfer: uart1-xfer {
 				rockchip,pins = <1 RK_PB1 2 &pcfg_pull_default>,
-						<1 RK_PB2 2 &pcfg_pull_none>;
+						<1 RK_PB2 2 &pcfg_pull_default>;
 			};
 
 			uart1_cts: uart1-cts {

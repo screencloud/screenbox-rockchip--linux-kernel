@@ -1070,6 +1070,8 @@
 		dma-names = "tx", "rx";
 		clock-names = "i2s_hclk", "i2s_clk";
 		clocks = <&cru HCLK_I2S0>, <&cru SCLK_I2S0>;
+		assigned-clocks = <&cru SCLK_I2S_SRC>;
+		assigned-clock-parents = <&cru PLL_GPLL>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&i2s0_bus>;
 		rockchip,playback-channels = <8>;
@@ -1297,6 +1299,24 @@
 		clock-names = "aclk", "hclk";
 		power-domains = <&power RK3288_PD_VIO>;
 		#iommu-cells = <0>;
+		status = "disabled";
+	};
+
+	cif: cif@ff950000 {
+		compatible = "rockchip,cif";
+		reg = <0x0 0xff950000 0x0 0x400>;
+		interrupts = <GIC_SPI 13 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&cru ACLK_VIP>, <&cru HCLK_VIP>,
+			<&cru PCLK_VIP_IN>, <&cru SCLK_VIP_OUT>;
+		clock-names = "aclk_cif0", "hclk_cif0",
+				"cif0_in", "cif0_out";
+		resets = <&cru SRST_VIP>;
+		reset-names = "rst_cif";
+		pinctrl-names = "cif_pin_all";
+		pinctrl-0 = <&isp_mipi &isp_dvp_d2d9 &isp_dvp_d10d11>;
+		rockchip,grf = <&grf>;
+		rockchip,cru = <&cru>;
+		power-domains = <&power RK3288_PD_VIO>;
 		status = "disabled";
 	};
 

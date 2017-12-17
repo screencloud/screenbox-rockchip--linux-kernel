@@ -19,6 +19,7 @@
 #define RGA_OUT_OF_RESOURCES    -10
 #define RGA_MALLOC_ERROR        -11
 
+#define RGA_BUF_GEM_TYPE_MASK	0xC0
 
 #define rgaIS_ERROR(status)			(status < 0)
 #define rgaNO_ERROR(status)			(status >= 0)
@@ -310,7 +311,6 @@ struct rga_req {
 
     struct sg_table *sg_src;
 	struct sg_table *sg_dst;
-	struct sg_table *sg_els;
 	struct dma_buf_attachment *attach_src;
 	struct dma_buf_attachment *attach_dst;
 };
@@ -390,12 +390,11 @@ struct rga_reg {
     //atomic_t int_enable;
 
     //struct rga_req      req;
-	struct sg_table *sg_src0;
-	struct sg_table *sg_src1;
+
+	struct sg_table *sg_src;
 	struct sg_table *sg_dst;
 
-	struct dma_buf_attachment *attach_src0;
-	struct dma_buf_attachment *attach_src1;
+	struct dma_buf_attachment *attach_src;
 	struct dma_buf_attachment *attach_dst;
 };
 

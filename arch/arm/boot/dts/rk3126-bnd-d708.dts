@@ -122,14 +122,14 @@
 					dev = "/dev/block/rknand_system";
 					type = "ext4";
 					mnt_flags = "ro,barrier=1,inode_readahead_blks=8";
-					fsmgr_flags = "wait,verify";
+					fsmgr_flags = "wait";
 				};
 				vendor {
 					compatible = "android,vendor";
 					dev = "/dev/block/rknand_vendor";
 					type = "ext4";
 					mnt_flags = "ro,barrier=1,inode_readahead_blks=8";
-					fsmgr_flags = "wait,verify";
+					fsmgr_flags = "wait";
 				};
 			};
 		};
@@ -196,7 +196,7 @@
 
 &codec {
 	#sound-dai-cells = <0>;
-	hp-ctl-gpios = <&gpio2 17 GPIO_ACTIVE_LOW>;
+	hp-ctl-gpios = <&gpio2 17 GPIO_ACTIVE_HIGH>;
 	spk-ctl-gpios = <&gpio2 10 GPIO_ACTIVE_HIGH>;
 	spk-mute-delay = <200>;
 	hp-mute-delay = <100>;
@@ -379,6 +379,7 @@
 				regulator-min-microvolt = <750000>;
 				regulator-max-microvolt = <1500000>;
 				regulator-ramp-delay = <6001>;
+				regulator-initial-mode = <1>;
 				regulator-always-on;
 				regulator-boot-on;
 				regulator-state-mem {
@@ -392,11 +393,12 @@
 				regulator-min-microvolt = <750000>;
 				regulator-max-microvolt = <1500000>;
 				regulator-ramp-delay = <6001>;
+				regulator-initial-mode = <1>;
 				regulator-always-on;
 				regulator-boot-on;
 				regulator-state-mem {
 					regulator-on-in-suspend;
-					regulator-suspend-microvolt = <900000>;
+					regulator-suspend-microvolt = <1000000>;
 				};
 			};
 
@@ -404,12 +406,14 @@
 				regulator-name = "vcc_ddr";
 				regulator-always-on;
 				regulator-boot-on;
+				regulator-initial-mode = <1>;
 			};
 
 			vcc_io: DCDC_REG4 {
 				regulator-name = "vcc_io";
 				regulator-min-microvolt = <3300000>;
 				regulator-max-microvolt = <3300000>;
+				regulator-initial-mode = <1>;
 				regulator-always-on;
 				regulator-boot-on;
 				regulator-state-mem {
@@ -594,6 +598,10 @@
 	keep-power-in-suspend;
 	non-removable;
 	vmmc-supply = <&ldo5>;
+	status = "okay";
+};
+
+&tsadc {
 	status = "okay";
 };
 

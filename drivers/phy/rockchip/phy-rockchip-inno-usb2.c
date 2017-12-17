@@ -977,9 +977,6 @@ static void rockchip_usb2phy_otg_sm_work(struct work_struct *work)
 					dev_dbg(&rport->phy->dev,
 						"dcp cable is connecetd\n");
 					cable = EXTCON_CHG_USB_DCP;
-					mutex_unlock(&rport->mutex);
-					rockchip_usb2phy_power_off(rport->phy);
-					mutex_lock(&rport->mutex);
 					sch_work = true;
 					break;
 				case POWER_SUPPLY_TYPE_USB_CDP:
@@ -998,9 +995,6 @@ static void rockchip_usb2phy_otg_sm_work(struct work_struct *work)
 					dev_dbg(&rport->phy->dev,
 						"floating cable is connecetd\n");
 					cable = EXTCON_CHG_USB_DCP;
-					mutex_unlock(&rport->mutex);
-					rockchip_usb2phy_power_off(rport->phy);
-					mutex_lock(&rport->mutex);
 					sch_work = true;
 					break;
 				default:
@@ -1777,6 +1771,18 @@ disable_clks:
 	return ret;
 }
 
+static int rk312x_usb2phy_tuning(struct rockchip_usb2phy *rphy)
+{
+	int ret;
+
+	/* Turn off differential receiver in suspend mode */
+	ret = regmap_write(rphy->grf, 0x298, 0x00040000);
+	if (ret)
+		return ret;
+
+	return 0;
+}
+
 static int rk3328_usb2phy_tuning(struct rockchip_usb2phy *rphy)
 {
 	int ret;
@@ -1970,6 +1976,7 @@ static const struct rockchip_usb2phy_cfg rk312x_phy_cfgs[] = {
 	{
 		.reg = 0x17c,
 		.num_ports	= 2,
+		.phy_tuning	= rk312x_usb2phy_tuning,
 		.clkout_ctl	= { 0x0190, 15, 15, 1, 0 },
 		.port_cfgs	= {
 			[USB2PHY_PORT_OTG] = {

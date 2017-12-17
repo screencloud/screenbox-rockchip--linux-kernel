@@ -59,6 +59,20 @@
 		pinctrl-0 = <&ir_int>;
 	};
 
+	vdd_logic: vdd-logic {
+		compatible = "pwm-regulator";
+
+		pwms = <&pwm3 0 25000>;
+		pwm-dutycycle-range = <100 0>;
+
+		regulator-name = "vdd_logic";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <925000>;
+		regulator-max-microvolt = <1400000>;
+		status = "okay";
+	};
+
 	keys: gpio-keys {
 		compatible = "gpio-keys";
 		#address-cells = <1>;
@@ -193,10 +207,35 @@
 		regulator-always-on;
 		vin-supply = <&vcc_stdby>;
 	};
+
+	hdmi_sound: hdmi-sound {
+		compatible = "simple-audio-card";
+		simple-audio-card,format = "i2s";
+		simple-audio-card,mclk-fs = <256>;
+		simple-audio-card,name = "rockchip,hdmi";
+		simple-audio-card,cpu {
+			sound-dai = <&i2s0>;
+		};
+		simple-audio-card,codec {
+			sound-dai = <&hdmi>;
+		};
+	};
 };
 
 &cpu0 {
 	cpu0-supply = <&vdd_arm>;
+};
+
+&cpu0_opp_table {
+	opp-816000000 {
+		status = "okay";
+	};
+};
+
+&gpu_opp_table {
+	opp-300000000 {
+		status = "okay";
+	};
 };
 
 &emac {
@@ -228,6 +267,11 @@
 };
 
 &gpu {
+	status = "okay";
+};
+
+&hdmi {
+	#sound-dai-cells = <0>;
 	status = "okay";
 };
 
@@ -334,6 +378,8 @@
 				regulator-name = "vcc25_hdmi";
 				regulator-min-microvolt = <2500000>;
 				regulator-max-microvolt = <2500000>;
+				regulator-always-on;
+				regulator-boot-on;
 			};
 
 			vcca_33: regulator@10 {
@@ -368,6 +414,11 @@
 };
 
 &i2c4 {
+	status = "okay";
+};
+
+&i2s0 {
+	#sound-dai-cells = <0>;
 	status = "okay";
 };
 
@@ -500,6 +551,10 @@
 	status = "okay";
 };
 
+&pwm3 {
+	status = "okay";
+};
+
 &saradc {
 	vref-supply = <&vcc_25>;
 	status = "okay";
@@ -536,6 +591,10 @@
 };
 
 &usb_otg {
+	status = "okay";
+};
+
+&vop0 {
 	status = "okay";
 };
 

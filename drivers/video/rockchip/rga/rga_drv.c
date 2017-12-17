@@ -43,6 +43,8 @@
 #include <linux/fb.h>
 #include <linux/wakelock.h>
 #include <linux/dma-buf.h>
+#include <linux/pm_runtime.h>
+#include <linux/version.h>
 #if defined(CONFIG_ION_ROCKCHIP)
 #include <linux/rockchip_ion.h>
 #endif
@@ -282,6 +284,11 @@ static void rga_power_on(void)
 	clk_prepare_enable(drvdata->aclk_rga);
 	clk_prepare_enable(drvdata->hclk_rga);
 	//clk_prepare_enable(drvdata->pd_rga);
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 4, 0))
+	pm_runtime_get_sync(drvdata->dev);
+#endif
+
 	wake_lock(&drvdata->wake_lock);
 	rga_service.enable = true;
 }
@@ -302,6 +309,11 @@ static void rga_power_off(void)
 		pr_err("delay 50 ms for running task\n");
 		rga_dump();
 	}
+
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 4, 0))
+	pm_runtime_put(drvdata->dev);
+#endif
 
 	//clk_disable_unprepare(drvdata->pd_rga);
 	clk_disable_unprepare(drvdata->aclk_rga);
@@ -495,91 +507,17 @@ static struct rga_reg * rga_reg_init(rga_session *session, struct rga_req *req)
         return NULL;
     }
 
+	reg->sg_src = req->sg_src;
+	reg->sg_dst = req->sg_dst;
+	reg->attach_src = req->attach_src;
+	reg->attach_dst = req->attach_dst;
+
     mutex_lock(&rga_service.lock);
 	list_add_tail(&reg->status_link, &rga_service.waiting);
 	list_add_tail(&reg->session_link, &session->waiting);
 	mutex_unlock(&rga_service.lock);
 
     return reg;
-}
-
-static struct rga_reg * rga_reg_init_2(rga_session *session, struct rga_req *req0, struct rga_req *req1)
-{
-    int32_t ret;
-
-    struct rga_reg *reg0, *reg1;
-
-    reg0 = NULL;
-    reg1 = NULL;
-
-    do
-    {
-        reg0 = kzalloc(sizeof(struct rga_reg), GFP_KERNEL);
-    	if (NULL == reg0) {
-    		pr_err("%s [%d] kmalloc fail in rga_reg_init\n", __FUNCTION__, __LINE__);
-            break;
-    	}
-
-        reg1 = kzalloc(sizeof(struct rga_reg), GFP_KERNEL);
-    	if (NULL == reg1) {
-    		pr_err("%s [%d] kmalloc fail in rga_reg_init\n", __FUNCTION__, __LINE__);
-            break;
-    	}
-
-        reg0->session = session;
-    	INIT_LIST_HEAD(&reg0->session_link);
-    	INIT_LIST_HEAD(&reg0->status_link);
-
-        reg1->session = session;
-        INIT_LIST_HEAD(&reg1->session_link);
-    	INIT_LIST_HEAD(&reg1->status_link);
-
-        req0->mmu_info.mmu_flag &= (~(1 << 10));
-
-        if(req0->mmu_info.mmu_en)
-        {
-            ret = rga_set_mmu_info(reg0, req0);
-            if(ret < 0) {
-                printk("%s, [%d] set mmu info error \n", __FUNCTION__, __LINE__);
-                break;
-            }
-        }
-
-        RGA_gen_reg_info(req0, (uint8_t *)reg0->cmd_reg);
-
-        req1->mmu_info.mmu_flag &= (~(1 << 8));
-
-        if(req1->mmu_info.mmu_en)
-        {
-            ret = rga_set_mmu_info(reg1, req1);
-            if(ret < 0) {
-                printk("%s, [%d] set mmu info error \n", __FUNCTION__, __LINE__);
-                break;
-            }
-        }
-
-        RGA_gen_reg_info(req1, (uint8_t *)reg1->cmd_reg);
-
-        mutex_lock(&rga_service.lock);
-    	list_add_tail(&reg0->status_link, &rga_service.waiting);
-        list_add_tail(&reg0->session_link, &session->waiting);
-        list_add_tail(&reg1->status_link, &rga_service.waiting);
-    	list_add_tail(&reg1->session_link, &session->waiting);
-        mutex_unlock(&rga_service.lock);
-
-        return reg1;
-    }
-    while(0);
-
-    if(reg0 != NULL) {
-        kfree(reg0);
-    }
-
-    if(reg1 != NULL) {
-        kfree(reg1);
-    }
-
-    return NULL;
 }
 
 /* Caller must hold rga_service.lock */
@@ -691,7 +629,37 @@ static void rga_try_set_reg(void)
 }
 
 
+static int rga_put_dma_buf(struct rga_req *req, struct rga_reg *reg)
+{
+	struct dma_buf_attachment *attach = NULL;
+	struct sg_table *sgt = NULL;
+	struct dma_buf *dma_buf = NULL;
 
+	if (!req && !reg)
+		return -EINVAL;
+
+	attach = (!reg) ? req->attach_src : reg->attach_src;
+	sgt = (!reg) ? req->sg_src : reg->sg_src;
+	if (attach && sgt)
+		dma_buf_unmap_attachment(attach, sgt, DMA_BIDIRECTIONAL);
+	if (attach) {
+		dma_buf = attach->dmabuf;
+		dma_buf_detach(dma_buf, attach);
+		dma_buf_put(dma_buf);
+	}
+
+	attach = (!reg) ? req->attach_dst : reg->attach_dst;
+	sgt = (!reg) ? req->sg_dst : reg->sg_dst;
+	if (attach && sgt)
+		dma_buf_unmap_attachment(attach, sgt, DMA_BIDIRECTIONAL);
+	if (attach) {
+		dma_buf = attach->dmabuf;
+		dma_buf_detach(dma_buf, attach);
+		dma_buf_put(dma_buf);
+	}
+
+	return 0;
+}
 
 /* Caller must hold rga_service.lock */
 static void rga_del_running_list(void)
@@ -709,6 +677,8 @@ static void rga_del_running_list(void)
             else
                 rga_mmu_buf.back += reg->MMU_len;
         }
+
+		rga_put_dma_buf(NULL, reg);
 
         atomic_sub(1, &reg->session->task_running);
         atomic_sub(1, &rga_service.total_running);
@@ -739,6 +709,8 @@ static void rga_del_running_list_timeout(void)
             else
                 rga_mmu_buf.back += reg->MMU_len;
         }
+
+		rga_put_dma_buf(NULL, reg);
 
         atomic_sub(1, &reg->session->task_running);
         atomic_sub(1, &rga_service.total_running);
@@ -771,42 +743,6 @@ static void rga_del_running_list_timeout(void)
 
         rga_reg_deinit(reg);
     }
-}
-
-
-static void rga_mem_addr_sel(struct rga_req *req)
-{
-    switch(req->src.format)
-    {
-        case RK_FORMAT_YCbCr_422_SP:
-            break;
-        case RK_FORMAT_YCbCr_422_P :
-            break;
-        case RK_FORMAT_YCbCr_420_SP :
-            if((req->src.yrgb_addr > 0xc0000000) && (req->src.uv_addr > 0xc0000000)
-                && (req->dst.yrgb_addr > 0xc0000000))
-            {
-                req->src.yrgb_addr = req->src.yrgb_addr - 0x60000000;
-                req->src.uv_addr = req->src.uv_addr - 0x60000000;
-                req->dst.yrgb_addr = req->dst.yrgb_addr - 0x60000000;
-                req->mmu_info.mmu_en = 0;
-                req->mmu_info.mmu_flag &= 0xfffe;
-            }
-            break;
-        case RK_FORMAT_YCbCr_420_P :
-            break;
-        case RK_FORMAT_YCrCb_422_SP :
-            break;
-        case RK_FORMAT_YCrCb_422_P :
-            break;
-        case RK_FORMAT_YCrCb_420_SP :
-            break;
-        case RK_FORMAT_YCrCb_420_P :
-            break;
-        default :
-            break;
-    }
-
 }
 
 /*
@@ -963,10 +899,9 @@ static int rga_get_dma_buf(struct rga_req *req)
 
 	req->sg_src = NULL;
 	req->sg_dst = NULL;
-	req->sg_els = NULL;
 	req->attach_src = NULL;
 	req->attach_dst = NULL;
-	mmu_flag = req->mmu_info.mmu_flag;
+	mmu_flag = (req->mmu_info.mmu_flag >> 8) & 1;
 	ret = rga_get_img_info(&req->src, mmu_flag, &req->sg_src,
 				&req->attach_src);
 	if (ret) {
@@ -974,7 +909,7 @@ static int rga_get_dma_buf(struct rga_req *req)
 		goto err_src;
 	}
 
-	mmu_flag = req->mmu_info.mmu_flag;
+	mmu_flag = (req->mmu_info.mmu_flag >> 10) & 1;
 	ret = rga_get_img_info(&req->dst, mmu_flag, &req->sg_dst,
 				&req->attach_dst);
 	if (ret) {
@@ -1002,14 +937,13 @@ static int rga_blit(rga_session *session, struct rga_req *req)
     int ret = -1;
     int num = 0;
     struct rga_reg *reg;
-    struct rga_req req2;
 
-    uint32_t saw, sah, daw, dah;
+	uint32_t saw, sah, daw, dah;
 
-    saw = req->src.act_w;
-    sah = req->src.act_h;
-    daw = req->dst.act_w;
-    dah = req->dst.act_h;
+	saw = req->src.act_w;
+	sah = req->src.act_h;
+	daw = req->dst.act_w;
+	dah = req->dst.act_h;
 
     #if RGA_TEST
     print_info(req);
@@ -1018,68 +952,45 @@ static int rga_blit(rga_session *session, struct rga_req *req)
         printk("RGA : DMA buf copy error\n");
         return -EFAULT;
     }
-
+	req->render_mode &= (~RGA_BUF_GEM_TYPE_MASK);
     do {
-        if((req->render_mode == bitblt_mode) && (((saw>>1) >= daw) || ((sah>>1) >= dah))) {
-            /* generate 2 cmd for pre scale */
+			if (((saw >> 1) >= daw) || ((sah >> 1) >= dah)) {
+				pr_err("unsupported to scaling less than 1/2 \n");
+				goto err_put_dma_buf;
+			}
 
-            ret = rga_check_param(req);
-        	if(ret == -EINVAL) {
-                printk("req 0 argument is inval\n");
-                break;
-        	}
+			if (((daw >> 3) >= saw) || ((dah >> 3) >= daw)) {
+				pr_err("unsupported to scaling more than 8 \n");
+				goto err_put_dma_buf;
+			}
 
-            ret = RGA_gen_two_pro(req, &req2);
-            if(ret == -EINVAL) {
-                break;
-            }
 
-            ret = rga_check_param(req);
-        	if(ret == -EINVAL) {
-                printk("req 1 argument is inval\n");
-                break;
-        	}
-
-            ret = rga_check_param(&req2);
-        	if(ret == -EINVAL) {
-                printk("req 2 argument is inval\n");
-                break;
-        	}
-
-            reg = rga_reg_init_2(session, req, &req2);
-            if(reg == NULL) {
-                break;
-            }
-            num = 2;
-
-        }
-        else {
             /* check value if legal */
             ret = rga_check_param(req);
         	if(ret == -EINVAL) {
                 printk("req argument is inval\n");
-                break;
+				goto err_put_dma_buf;
         	}
-
-            if(req->render_mode == bitblt_mode)
-                rga_mem_addr_sel(req);
 
             reg = rga_reg_init(session, req);
             if(reg == NULL) {
-		pr_err("init reg fail\n");
-                break;
+				pr_err("init reg fail\n");
+				goto err_put_dma_buf;
             }
+
             num = 1;
-        }
 
-        mutex_lock(&rga_service.lock);
-        atomic_add(num, &rga_service.total_running);
-        rga_try_set_reg();
-        mutex_unlock(&rga_service.lock);
+			mutex_lock(&rga_service.lock);
+			atomic_add(num, &rga_service.total_running);
+			rga_try_set_reg();
+			mutex_unlock(&rga_service.lock);
 
-        return 0;
-    }
+			return 0;
+	}
     while(0);
+
+err_put_dma_buf:
+	rga_put_dma_buf(req, NULL);
 
     return -EFAULT;
 }
@@ -1425,6 +1336,10 @@ static int rga_drv_probe(struct platform_device *pdev)
 		goto err_misc_register;
 	}
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 4, 0))
+	pm_runtime_enable(&pdev->dev);
+#endif
+
 	pr_info("Driver loaded succesfully\n");
 
 	return 0;
@@ -1454,6 +1369,10 @@ static int rga_drv_remove(struct platform_device *pdev)
 	//clk_put(data->pd_rga);
 	devm_clk_put(&pdev->dev, data->aclk_rga);
 	devm_clk_put(&pdev->dev, data->hclk_rga);
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 4, 0))
+	pm_runtime_disable(&pdev->dev);
+#endif
 
 	//kfree(data);
 	return 0;

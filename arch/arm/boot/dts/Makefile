@@ -528,11 +528,15 @@ dtb-$(CONFIG_ARCH_ROCKCHIP) += \
 	rk3229-gva-sdk.dtb \
 	rk3288-evb-act8846.dtb \
 	rk3288-evb-android-act8846-edp.dtb \
+	rk3288-evb-android-rk808-edp.dtb \
 	rk3288-evb-android-rk818-edp.dtb \
+	rk3288-evb-android-rk818-hdmi.dtb \
 	rk3288-evb-android-rk818-lvds.dtb \
 	rk3288-evb-android-rk818-mipi.dtb \
 	rk3288-evb-android-rk818-mipi-edp.dtb \
+	rk3288-evb-rk1608.dtb \
 	rk3288-evb-rk808.dtb \
+	rk3288-evb-rk808-linux.dtb \
 	rk3288-fennec.dtb \
 	rk3288-firefly-beta.dtb \
 	rk3288-firefly-reload.dtb \
@@ -542,6 +546,7 @@ dtb-$(CONFIG_ARCH_ROCKCHIP) += \
 	rk3288-miqi.dtb \
 	rk3288-phycore-rdk.dtb \
 	rk3288-popmetal.dtb \
+	rk3288-popmetal-android.dtb \
 	rk3288-r89.dtb \
 	rk3288-rock2-square.dtb \
 	rk3288-veyron-jaq.dtb \
