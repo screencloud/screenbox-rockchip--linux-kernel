@@ -426,7 +426,7 @@
 	/delete-property/ #dma-cells;
 	/delete-property/ dma-names;
 
-	 gd25q128@0 {
+	gd25q128@0 {
 		#address-cells = <0x1>;
 		#size-cells = <0x0>;
 		compatible = "jedec,spi-nor";
