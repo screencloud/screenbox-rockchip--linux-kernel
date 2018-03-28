@@ -182,3 +182,10 @@ UNUSUAL_DEV(0x4971, 0x8017, 0x0000, 0x9999,
 		"External HDD",
 		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
 		US_FL_NO_REPORT_OPCODES),
+
+/* Reported-by: Thomas Kaiser and Kamil Trzciński <ayufan@ayufan.eu> */
+UNUSUAL_DEV(0x2537, 0x1066, 0x0000, 0x9999,
+		"Norelsys",
+		"NS1066X",
+		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
+		US_FL_IGNORE_UAS),
