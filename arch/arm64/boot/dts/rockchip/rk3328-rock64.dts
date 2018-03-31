@@ -609,20 +609,21 @@
 };
 
 &threshold {
-	temperature = <90000>; /* millicelsius */
+	temperature = <80000>; /* millicelsius */
 };
 
 &target {
-	temperature = <105000>; /* millicelsius */
+	temperature = <95000>; /* millicelsius */
 };
 
 &soc_crit {
-	temperature = <110000>; /* millicelsius */
+	temperature = <100000>; /* millicelsius */
 };
 
 &tsadc {
 	rockchip,hw-tshut-mode = <0>;
 	rockchip,hw-tshut-polarity = <0>;
+	rockchip,hw-tshut-temp = <110000>;
 	status = "okay";
 };
 
