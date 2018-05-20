@@ -67,17 +67,6 @@
 		};
 	};
 
-	switches {
-		compatible = "gpio-leds";
-
-		usb-switch {
-			linux,default-trigger = "none";
-			gpios = <&gpio0 2 1>;
-			mode = <0x23>;
-			default-state = "on";
-		};
-	};
-
 	gmac_clkin: external-gmac-clock {
 		compatible = "fixed-clock";
 		clock-frequency = <125000000>;
@@ -126,7 +115,7 @@
 	vcc_host1_5v: vcc_otg_5v: vcc-host1-5v-regulator {
 		compatible = "regulator-fixed";
 		enable-active-high;
-		gpio = <&gpio0 27 GPIO_ACTIVE_HIGH>;
+		gpio = <&gpio0 2 1>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&usb20_host_drv>;
 		regulator-name = "vcc_host1_5v";
