@@ -532,7 +532,7 @@
 };
 
 &rockchip_suspend {
-	status = "okay";
+	status = "disabled";
 	rockchip,virtual-poweroff = <1>;
 };
 
