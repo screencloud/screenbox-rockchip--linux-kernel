@@ -217,15 +217,6 @@
 	cpu-supply = <&vdd_arm>;
 };
 
-&dfi {
-	status = "disabled";
-};
-
-&dmc {
-	center-supply = <&vdd_logic>;
-	status = "disabled";
-};
-
 &display_subsystem {
 	status = "okay";
 };
@@ -466,14 +457,6 @@
 	status = "okay";
 };
 
-&iep {
-	status = "okay";
-};
-
-&iep_mmu {
-	status = "okay";
-};
-
 &io_domains {
 	status = "okay";
 
@@ -518,22 +501,12 @@
 	};
 };
 
-&rga {
-	status = "okay";
-};
-
 &rkvdec {
 	status = "okay";
-	vcodec-supply = <&vdd_logic>;
 };
 
 &rkvdec_mmu {
 	status = "okay";
-};
-
-&rockchip_suspend {
-	status = "disabled";
-	rockchip,virtual-poweroff = <1>;
 };
 
 &sdmmc {
