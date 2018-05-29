@@ -545,11 +545,6 @@
 				label = "loader";
 				reg = <0x8000 0x3F8000>;
 			};
-
-			vendor@7c0000 {
-				label = "vendor";
-				reg = <0x7C0000 0x40000>;
-			};
 		};
 	};
 };
