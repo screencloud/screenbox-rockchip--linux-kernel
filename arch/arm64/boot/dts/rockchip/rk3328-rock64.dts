@@ -653,3 +653,12 @@
 &venc_srv {
 	status = "okay";
 };
+
+&dfi {
+	status = "okay";
+};
+
+&dmc {
+	center-supply = <&vdd_logic>;
+	status = "okay";
+};
