@@ -1107,31 +1107,12 @@
 	};
 };
 
-&cluster1_opp {
-	opp-1992000000 {
-		opp-hz = /bits/ 64 <1992000000>;
-		opp-microvolt = <1300000>;
-		opp-microvolt-L0 = <1300000>;
-		opp-microvolt-L1 = <1275000>;
-		opp-microvolt-L2 = <1250000>;
-		opp-microvolt-L3 = <1225000>;
-		clock-latency-ns = <40000>;
-	};
-};
-
-&dmc_opp_table {
-	opp-933000000 {
-		opp-hz = /bits/ 64 <933000000>;
-		opp-microvolt = <900000>;
-	};
-};
-
 &dfi {
-	status = "okay";
+	status = "disabled";
 };
 
 &dmc {
-	status = "okay";
+	status = "disabled";
 	center-supply = <&vdd_center>;
 	upthreshold = <40>;
 	downdifferential = <20>;
