@@ -1059,7 +1059,7 @@
 	route {
 		route_hdmi: route-hdmi {
 			status = "okay";
-			connect = <&vopl_out_hdmi>;
+			connect = <&vopb_out_hdmi>;
 		};
 
 		route_dsi: route-dsi {
