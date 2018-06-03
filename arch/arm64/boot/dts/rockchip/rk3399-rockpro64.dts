@@ -353,8 +353,8 @@
 
 &i2c0 {
 	status = "okay";
-	i2c-scl-rising-time-ns = <168>;
-	i2c-scl-falling-time-ns = <4>;
+	i2c-scl-rising-time-ns = <180>;
+	i2c-scl-falling-time-ns = <30>;
 	clock-frequency = <400000>;
 
 	vdd_cpu_b: syr827@40 {
@@ -364,7 +364,7 @@
 		pinctrl-0 = <&vsel1_gpio>;
 		vsel-gpios = <&gpio1 17 GPIO_ACTIVE_HIGH>;
 		regulator-name = "vdd_cpu_b";
-		regulator-min-microvolt = <712500>;
+		regulator-min-microvolt = <875000>;
 		regulator-max-microvolt = <1500000>;
 		regulator-ramp-delay = <1000>;
 		fcs,suspend-voltage-selector = <1>;
@@ -383,7 +383,7 @@
 		pinctrl-0 = <&vsel2_gpio>;
 		vsel-gpios = <&gpio1 14 GPIO_ACTIVE_HIGH>;
 		regulator-name = "vdd_gpu";
-		regulator-min-microvolt = <712500>;
+		regulator-min-microvolt = <825000>;
 		regulator-max-microvolt = <1500000>;
 		regulator-ramp-delay = <1000>;
 		fcs,suspend-voltage-selector = <1>;
@@ -424,9 +424,8 @@
 		regulators {
 			vdd_center: DCDC_REG1 {
 				regulator-name = "vdd_center";
-				regulator-min-microvolt = <750000>;
-				regulator-max-microvolt = <1350000>;
-				regulator-ramp-delay = <6001>;
+				regulator-min-microvolt = <900000>;
+				regulator-max-microvolt = <900000>;
 				regulator-always-on;
 				regulator-boot-on;
 				regulator-state-mem {
