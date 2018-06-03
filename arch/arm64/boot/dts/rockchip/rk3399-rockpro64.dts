@@ -364,7 +364,7 @@
 		pinctrl-0 = <&vsel1_gpio>;
 		vsel-gpios = <&gpio1 17 GPIO_ACTIVE_HIGH>;
 		regulator-name = "vdd_cpu_b";
-		regulator-min-microvolt = <875000>;
+		regulator-min-microvolt = <825000>;
 		regulator-max-microvolt = <1500000>;
 		regulator-ramp-delay = <1000>;
 		fcs,suspend-voltage-selector = <1>;
@@ -377,7 +377,7 @@
 	};
 
 	vdd_gpu: syr828@41 {
-		compatible = "silergy,syr828";
+		compatible = "silergy,syr828-disabled";
 		reg = <0x41>;
 		regulator-compatible = "fan53555-reg";
 		pinctrl-0 = <&vsel2_gpio>;
@@ -608,7 +608,7 @@
 };
 
 &gpu {
-	status = "okay";
+	status = "disabled";
 	mali-supply = <&vdd_gpu>;
 };
 
