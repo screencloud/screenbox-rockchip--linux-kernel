@@ -1016,13 +1016,23 @@
 };
 
 &vopb {
+	status = "okay";
 	assigned-clocks = <&cru DCLK_VOP0_DIV>;
 	assigned-clock-parents = <&cru PLL_VPLL>;
 };
 
+&vopb_mmu {
+	status = "okay";
+};
+
 &vopl {
+	status = "okay";
 	assigned-clocks = <&cru DCLK_VOP1_DIV>;
 	assigned-clock-parents = <&cru PLL_CPLL>;
+};
+
+&vopb_mmu {
+	status = "okay";
 };
 
 &i2c4 {
@@ -1053,25 +1063,6 @@
 
 &display_subsystem {
 	status = "okay";
-
-	ports = <&vopb_out>, <&vopl_out>;
-
-	route {
-		route_hdmi: route-hdmi {
-			status = "okay";
-			connect = <&vopb_out_hdmi>;
-		};
-
-		route_dsi: route-dsi {
-			status = "disabled";
-			connect = <&vopb_out_dsi>;
-		};
-
-		route_edp: route-edp {
-			status = "disabled";
-			connect = <&vopb_out_edp>;
-		};
-	};
 };
 
 &hdmi {
