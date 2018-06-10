@@ -55,6 +55,12 @@
 		stdout-path = "serial2:1500000n8";
 	};
 
+	/* first 64k(0xff8c0000~0xff8d0000) for ddr and suspend */
+	iram: sram@ff8d0000 {
+		compatible = "mmio-sram";
+		reg = <0x0 0xff8d0000 0x0 0x20000>; /* 128k */
+	};
+
 	aliases {
 		ethernet0 = &gmac;
 	};
@@ -377,7 +383,7 @@
 	};
 
 	vdd_gpu: syr828@41 {
-		compatible = "silergy,syr828-disabled";
+		compatible = "silergy,syr828";
 		reg = <0x41>;
 		regulator-compatible = "fan53555-reg";
 		pinctrl-0 = <&vsel2_gpio>;
@@ -609,7 +615,7 @@
 };
 
 &gpu {
-	status = "disabled";
+	status = "okay";
 	mali-supply = <&vdd_gpu>;
 };
 
@@ -673,7 +679,7 @@
 &uart0 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&uart0_xfer &uart0_cts>;
-	status = "okay";
+	status = "disabled";
 };
 
 &uart2 {
