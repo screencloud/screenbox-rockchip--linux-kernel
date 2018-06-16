@@ -1059,12 +1059,12 @@
 	extcon = <&fusb0>;
 };
 
-&hdmi_in_vopl {
-	status = "disabled";
+&hdmi_in {
+	/delete-node/ endpoint@1; // delete hdmi_in_vopl
 };
 
-&dp_in_vopb {
-	status = "disabled";
+&dp_in {
+	/delete-node/ endpoint@0; // delete dp_in_vopb
 };
 
 &display_subsystem {
