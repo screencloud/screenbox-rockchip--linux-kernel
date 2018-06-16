@@ -151,18 +151,6 @@
 		#clock-cells = <0>;
 	};
 
-	spdif-sound {
-		status = "okay";
-		compatible = "simple-audio-card";
-		simple-audio-card,name = "ROCKCHIP,SPDIF";
-		simple-audio-card,cpu {
-			sound-dai = <&spdif>;
-		};
-		simple-audio-card,codec {
-			sound-dai = <&spdif_out>;
-		};
-	};
-
 	spdif_out: spdif-out {
 		status = "okay";
 		compatible = "linux,spdif-dit";
@@ -215,6 +203,13 @@
 		status = "okay";
 	};
 
+	hdmi_dp_sound: hdmi-dp-sound {
+		status = "okay";
+		compatible = "rockchip,rk3399-hdmi-dp";
+		rockchip,cpu = <&i2s2>;
+		rockchip,codec = <&hdmi>, <&cdn_dp>;
+	};
+
 	es8316-sound {
 		status = "okay";
 		compatible = "simple-audio-card";
@@ -234,6 +229,18 @@
 		};
 		simple-audio-card,codec {
 			sound-dai = <&es8316>;
+		};
+	};
+
+	spdif-sound {
+		status = "okay";
+		compatible = "simple-audio-card";
+		simple-audio-card,name = "ROCKCHIP,SPDIF";
+		simple-audio-card,cpu {
+			sound-dai = <&spdif>;
+		};
+		simple-audio-card,codec {
+			sound-dai = <&spdif_out>;
 		};
 	};
 
@@ -270,13 +277,6 @@
 			label = "power";
 			gpio-key,wakeup;
 		};
-	};
-
-	hdmi_dp_sound: hdmi-dp-sound {
-		status = "okay";
-		compatible = "rockchip,rk3399-hdmi-dp";
-		rockchip,cpu = <&i2s2>;
-		rockchip,codec = <&hdmi>, <&cdn_dp>;
 	};
 };
 
