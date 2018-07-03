@@ -2,7 +2,7 @@ image: ayufan/rock64-dockerfiles:x86_64
 
 variables:
   GITHUB_USER: ayufan-rock64
-  GITHUB_REPO: linux-mainline-kernel
+  GITHUB_REPO: linux-kernel
 
   USE_CCACHE: "true"
   CCACHE_DIR: "/data/shared/ccache"
