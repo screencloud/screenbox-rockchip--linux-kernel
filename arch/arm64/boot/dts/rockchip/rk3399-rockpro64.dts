@@ -614,7 +614,7 @@
 };
 
 &gpu {
-	status = "disabled";
+	status = "okay";
 	mali-supply = <&vdd_gpu>;
 };
 
