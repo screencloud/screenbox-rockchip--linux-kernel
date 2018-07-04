@@ -528,7 +528,7 @@
 	status = "okay";
 
 	flash@0 {
-		compatible = "gigadevice,gd25q128", "jedec,spi-nor";
+		compatible = "jedec,spi-nor";
 		#address-cells = <1>;
 		#size-cells = <1>;
 		reg = <0>;
