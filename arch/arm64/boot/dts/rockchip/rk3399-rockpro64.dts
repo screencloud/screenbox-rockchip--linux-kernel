@@ -388,7 +388,7 @@
 		pinctrl-0 = <&vsel2_gpio>;
 		vsel-gpios = <&gpio1 14 GPIO_ACTIVE_HIGH>;
 		regulator-name = "vdd_gpu";
-		regulator-min-microvolt = <825000>;
+		regulator-min-microvolt = <712500>;
 		regulator-max-microvolt = <1500000>;
 		regulator-ramp-delay = <1000>;
 		fcs,suspend-voltage-selector = <1>;
