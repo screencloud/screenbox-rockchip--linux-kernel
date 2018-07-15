@@ -348,6 +348,10 @@
 
 &i2s2 {
 	#sound-dai-cells = <0>;
+
+	// TODO: Some problems with DMA channels?
+	dmas = <&dmac_bus 4>;
+	dma-names = "tx";
 };
 
 &spdif {
