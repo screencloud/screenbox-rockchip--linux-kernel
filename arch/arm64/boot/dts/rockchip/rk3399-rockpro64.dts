@@ -1107,11 +1107,8 @@
 	opp-1512000000 {
 		opp-hz = /bits/ 64 <1512000000>;
 		opp-microvolt = <1200000>;
-		opp-microvolt-L0 = <1200000>;
-		opp-microvolt-L1 = <1175000>;
-		opp-microvolt-L2 = <1150000>;
-		opp-microvolt-L3 = <1125000>;
 		clock-latency-ns = <40000>;
+		status = "disabled";
 	};
 };
 
@@ -1119,11 +1116,8 @@
 	opp-1992000000 {
 		opp-hz = /bits/ 64 <1992000000>;
 		opp-microvolt = <1300000>;
-		opp-microvolt-L0 = <1300000>;
-		opp-microvolt-L1 = <1275000>;
-		opp-microvolt-L2 = <1250000>;
-		opp-microvolt-L3 = <1225000>;
 		clock-latency-ns = <40000>;
+		status = "disabled";
 	};
 };
 
@@ -1146,15 +1140,15 @@
 	system-status-freq = <
 		/*system status         freq(KHz)*/
 		SYS_STATUS_NORMAL       800000
-		SYS_STATUS_REBOOT       528000
-		SYS_STATUS_SUSPEND      200000
-		SYS_STATUS_VIDEO_1080P  200000
-		SYS_STATUS_VIDEO_4K     600000
+		SYS_STATUS_REBOOT       400000
+		SYS_STATUS_SUSPEND      400000
+		SYS_STATUS_VIDEO_1080P  800000
+		SYS_STATUS_VIDEO_4K     800000
 		SYS_STATUS_VIDEO_4K_10B 800000
 		SYS_STATUS_PERFORMANCE  800000
 		SYS_STATUS_BOOST        400000
-		SYS_STATUS_DUALVIEW     600000
-		SYS_STATUS_ISP          600000
+		SYS_STATUS_DUALVIEW     800000
+		SYS_STATUS_ISP          800000
 	>;
 	vop-bw-dmc-freq = <
 	/* min_bw(MB/s) max_bw(MB/s) freq(KHz) */
@@ -1163,6 +1157,7 @@
 		1702    99999    400000
 	>;
 	auto-min-freq = <800000>;
+	auto-freq-en = <0>;
 };
 
 &i2c1 {
