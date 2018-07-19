@@ -55,6 +55,17 @@
 		stdout-path = "serial2:1500000n8";
 	};
 
+	reserved-memory {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		drm_logo: drm-logo@00000000 {
+			compatible = "rockchip,drm-logo";
+			reg = <0x0 0x0 0x0 0x0>;
+		};
+	};
+
 	/* first 64k(0xff8c0000~0xff8d0000) for ddr and suspend */
 	iram: sram@ff8d0000 {
 		compatible = "mmio-sram";
@@ -1063,17 +1074,30 @@
 	extcon = <&fusb0>;
 };
 
-&hdmi_in_vopl {
-	status = "disabled";
-};
-
-&dp_in_vopb {
-	status = "disabled";
-};
-
 &display_subsystem {
 	/delete-property/ devfreq;
 	status = "okay";
+
+	ports = <&vopb_out>, <&vopl_out>;
+	logo-memory-region = <&drm_logo>;
+
+	route {
+		route_hdmi: route-hdmi {
+			logo,uboot = "logo.bmp";
+			logo,kernel = "logo_kernel.bmp";
+			logo,mode = "center";
+			charge_logo,mode = "center";
+			connect = <&vopb_out_hdmi>;
+		};
+
+		route_dp: route-dp {
+			logo,uboot = "logo.bmp";
+			logo,kernel = "logo_kernel.bmp";
+			logo,mode = "center";
+			charge_logo,mode = "center";
+			connect = <&vopl_out_dp>;
+		};
+	};
 };
 
 &hdmi {
