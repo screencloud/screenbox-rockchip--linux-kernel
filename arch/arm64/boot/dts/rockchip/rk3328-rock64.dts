@@ -655,10 +655,10 @@
 };
 
 &dfi {
-	status = "okay";
+	status = "disabled";
 };
 
 &dmc {
 	center-supply = <&vdd_logic>;
-	status = "okay";
+	status = "disabled";
 };
