@@ -276,6 +276,15 @@
 		};
 	};
 
+	fan0: pwm-fan {
+		compatible = "pwm-fan";
+		pwms = <&pwm1 0 10000 0>;
+		cooling-min-state = <0>;
+		cooling-max-state = <3>;
+		#cooling-cells = <2>;
+		cooling-levels = <0 102 170 230>;
+	}; 
+
 	rk_key: rockchip-key {
 		compatible = "rockchip,key";
 		status = "okay";
@@ -645,6 +654,24 @@
 	temperature = <105000>;
 };
 
+&cooling_maps {
+	map3 {
+		trip = <&threshold>;
+		cooling-device = <&fan0 0 1>;
+		contribution = <4096>;
+	};
+	map4 {
+		trip = <&target>;
+		cooling-device = <&fan0 1 2>;
+		contribution = <4096>;
+	};
+	map5 {
+		trip = <&soc_crit>;
+		cooling-device = <&fan0 2 3>;
+		contribution = <4096>;
+	};
+};
+
 &tcphy0 {
 	extcon = <&fusb0>;
 	status = "okay";
@@ -733,6 +760,11 @@
 &usbdrd_dwc3_1 {
 	dr_mode = "host";
 	status = "okay";
+};
+
+&pwm1 {
+	status = "okay";
+	pinctrl-names = "active";
 };
 
 &pwm2 {
