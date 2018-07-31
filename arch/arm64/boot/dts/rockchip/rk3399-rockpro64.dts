@@ -367,11 +367,8 @@
 };
 
 &i2s2 {
+	status = "okay";
 	#sound-dai-cells = <0>;
-
-	// TODO: Some problems with DMA channels?
-	dmas = <&dmac_bus 4>;
-	dma-names = "tx";
 };
 
 &spdif {
@@ -895,10 +892,6 @@
 };
 
 &saradc {
-	status = "okay";
-};
-
-&i2s2 {
 	status = "okay";
 };
 
