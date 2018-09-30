@@ -100,7 +100,7 @@ struct eth_dev {
 
 #define RX_EXTRA	20	/* bytes guarding against rx overflows */
 
-#define DEFAULT_QLEN	2	/* double buffering by default */
+#define DEFAULT_QLEN	8	/* 8 buffering by default */
 
 /* for dual-speed hardware, use deeper queues at high/super speed */
 static inline int qlen(struct usb_gadget *gadget, unsigned qmult)
