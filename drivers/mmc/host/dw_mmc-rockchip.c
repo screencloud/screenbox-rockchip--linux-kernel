@@ -7,7 +7,9 @@
  * (at your option) any later version.
  */
 
+#include <linux/ktime.h>
 #include <linux/module.h>
+#include <linux/moduleparam.h>
 #include <linux/platform_device.h>
 #include <linux/clk.h>
 #include <linux/mmc/host.h>
@@ -275,10 +277,31 @@ static const struct of_device_id dw_mci_rockchip_match[] = {
 };
 MODULE_DEVICE_TABLE(of, dw_mci_rockchip_match);
 
+#ifdef CONFIG_PCIE_ROCKCHIP
+extern bool rk_pcie_port_initialized;
+static int rkdwmmc_defer_time = 2000;
+core_param(rkdwmmc_defer_time, rkdwmmc_defer_time, int, S_IRUGO);
+static s64 defer_start = 0;
+#endif
 static int dw_mci_rockchip_probe(struct platform_device *pdev)
 {
 	const struct dw_mci_drv_data *drv_data;
 	const struct of_device_id *match;
+
+#ifdef CONFIG_PCIE_ROCKCHIP
+	s64 now = ktime_to_ms(ktime_get());
+	if (!rk_pcie_port_initialized) {
+		if (defer_start == 0) {
+			defer_start = now;
+		}
+
+		if (now - defer_start < rkdwmmc_defer_time) {
+			dev_dbg(&pdev->dev, "deferring probe until pcie port initialized\n");
+			return -EPROBE_DEFER;
+		}
+		dev_warn(&pdev->dev, "no longer waiting for pcie port init\n");
+	}
+#endif
 
 	if (!pdev->dev.of_node)
 		return -ENODEV;
