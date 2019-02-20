@@ -1277,6 +1277,9 @@ static int __maybe_unused rockchip_pcie_resume_noirq(struct device *dev)
 	return 0;
 }
 
+bool rk_pcie_port_initialized = false;
+EXPORT_SYMBOL(rk_pcie_port_initialized);
+
 static int rockchip_pcie_probe(struct platform_device *pdev)
 {
 	struct rockchip_pcie *rockchip;
@@ -1405,6 +1408,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
 		pcie_bus_configure_settings(child);
 
 	pci_bus_add_devices(bus);
+	rk_pcie_port_initialized = true;
 	return err;
 
 err_free_res:
@@ -1425,6 +1429,7 @@ err_hclk_pcie:
 err_aclk_perf_pcie:
 	clk_disable_unprepare(rockchip->aclk_pcie);
 err_aclk_pcie:
+	rk_pcie_port_initialized = true;
 	return err;
 }
 
