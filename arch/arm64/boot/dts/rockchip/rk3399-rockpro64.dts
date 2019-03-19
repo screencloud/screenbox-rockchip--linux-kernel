@@ -241,7 +241,7 @@
 		cooling-max-state = <3>;
 		#cooling-cells = <2>;
 		cooling-levels = <0 80 170 230>;
-	}; 
+	};
 
 	rk_key: rockchip-key {
 		compatible = "rockchip,key";
@@ -709,6 +709,15 @@
 &gpu {
 	status = "okay";
 	mali-supply = <&vdd_gpu>;
+};
+
+/* HACK: keep MALI version on linux */
+&gpu_power_model {
+	// for DDK r14.
+	voltage = <900>;
+	frequency = <500>;
+	static-power = <300>;
+	dynamic-power = <396>;
 };
 
 &hdmi {
