@@ -363,6 +363,10 @@
 	};
 };
 
+&dp_in_vopb {
+	status = "disabled";
+};
+
 &display_subsystem {
 	status = "okay";
 
@@ -370,14 +374,6 @@
 	logo-memory-region = <&drm_logo>;
 
 	route {
-		route_hdmi: route-hdmi {
-			logo,uboot = "logo.bmp";
-			logo,kernel = "logo_kernel.bmp";
-			logo,mode = "center";
-			charge_logo,mode = "center";
-			connect = <&vopl_out_hdmi>;
-		};
-
 		route_dp: route-dp {
 			logo,uboot = "logo.bmp";
 			logo,kernel = "logo_kernel.bmp";
@@ -413,6 +409,10 @@
 			};
 		};
 	};
+};
+
+&edp_in_vopl {
+	status = "disabled";
 };
 
 &emmc_phy {
@@ -723,6 +723,10 @@
 			<&cru PLL_VPLL>,
 			<&cru PCLK_VIO_GRF>;
 	clock-names = "iahb", "isfr", "vpll", "grf";
+};
+
+&hdmi_in_vopb {
+	status = "disabled";
 };
 
 &io_domains {
@@ -1053,7 +1057,7 @@
 	assigned-clock-parents = <&cru PLL_CPLL>;
 };
 
-&vopb_mmu {
+&vopl_mmu {
 	status = "okay";
 };
 
