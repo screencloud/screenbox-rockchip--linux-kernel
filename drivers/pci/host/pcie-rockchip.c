@@ -249,9 +249,7 @@ struct rockchip_pcie {
 	phys_addr_t mem_reserve_start;
 	size_t mem_reserve_size;
 	int dma_trx_enabled;
-	int deferred;
 	struct dma_trx_obj *dma_obj;
-	struct list_head resources;
 };
 
 static u32 rockchip_pcie_read(struct rockchip_pcie *rockchip, u32 reg)
@@ -1083,18 +1081,10 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
 	rockchip->mem_reserve_start = reg.start;
 	rockchip->mem_reserve_size = resource_size(&reg);
 
-	err = of_property_read_u32(node, "rockchip,dma_trx_enabled",
-				   &rockchip->dma_trx_enabled);
+	err = of_property_read_u32(node, "dma_trx_enabled",
+				&rockchip->dma_trx_enabled);
 	if (err < 0) {
-		dev_warn(dev,
-			"missing \"rockchip,dma_trx_enabled\" property\n");
-		return 0;
-	}
-
-	err = of_property_read_u32(node, "rockchip,deferred",
-				&rockchip->deferred);
-	if (err < 0) {
-		dev_warn(dev, "missing \"rockchip,deferred\" property\n");
+		dev_warn(dev, "missing \"dma_trx_enabled\" property\n");
 		return 0;
 	}
 
@@ -1387,78 +1377,18 @@ static int __maybe_unused rockchip_pcie_resume_noirq(struct device *dev)
 	return 0;
 }
 
-static int rockchip_pcie_really_probe(struct rockchip_pcie *rockchip)
-{
-	int err;
-	struct pci_bus *bus, *child;
-	struct	device *dev = rockchip->dev;
-
-	err = rockchip_pcie_init_port(rockchip);
-	if (err)
-		return err;
-
-	rockchip_pcie_enable_interrupts(rockchip);
-
-	err = rockchip_cfg_atu(rockchip);
-	if (err)
-		return err;
-
-	bus = pci_scan_root_bus(dev, 0, &rockchip_pcie_ops,
-				rockchip, &rockchip->resources);
-	if (!bus)
-		return -EINVAL;
-
-	pci_bus_size_bridges(bus);
-	pci_bus_assign_resources(bus);
-	list_for_each_entry(child, &bus->children, node)
-		pcie_bus_configure_settings(child);
-
-	pci_bus_add_devices(bus);
-
-	return 0;
-}
-
-static ssize_t pcie_deferred_store(struct device *dev,
-			   struct device_attribute *attr,
-			   const char *buf, size_t size)
-{
-	u32 val = 0;
-	int err;
-	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
-
-	err = kstrtou32(buf, 10, &val);
-	if (err)
-		return err;
-
-	if (val) {
-		err = rockchip_pcie_really_probe(rockchip);
-		if (err)
-			return -EINVAL;
-	}
-
-	return size;
-}
-
-static DEVICE_ATTR_WO(pcie_deferred);
-
-static struct attribute *pcie_attrs[] = {
-	&dev_attr_pcie_deferred.attr,
-	NULL
-};
-
-static const struct attribute_group pcie_attr_group = {
-	.attrs = pcie_attrs,
-};
-
 static int rockchip_pcie_probe(struct platform_device *pdev)
 {
 	struct rockchip_pcie *rockchip;
 	struct device *dev = &pdev->dev;
+	struct pci_bus *bus, *child;
 	struct resource_entry *win;
 	resource_size_t io_base;
 	struct resource	*mem;
 	struct resource	*io;
 	int err;
+
+	LIST_HEAD(res);
 
 	if (!dev->of_node)
 		return -ENODEV;
@@ -1504,23 +1434,27 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
 		goto err_set_vpcie;
 	}
 
+	err = rockchip_pcie_init_port(rockchip);
+	if (err)
+		goto err_vpcie;
+
+	rockchip_pcie_enable_interrupts(rockchip);
+
 	err = rockchip_pcie_init_irq_domain(rockchip);
 	if (err < 0)
 		goto err_vpcie;
 
-	INIT_LIST_HEAD(&rockchip->resources);
-
 	err = of_pci_get_host_bridge_resources(dev->of_node, 0, 0xff,
-					       &rockchip->resources, &io_base);
+					       &res, &io_base);
 	if (err)
 		goto err_vpcie;
 
-	err = devm_request_pci_bus_resources(dev, &rockchip->resources);
+	err = devm_request_pci_bus_resources(dev, &res);
 	if (err)
 		goto err_free_res;
 
 	/* Get the I/O and memory ranges from DT */
-	resource_list_for_each_entry(win, &rockchip->resources) {
+	resource_list_for_each_entry(win, &res) {
 		switch (resource_type(win->res)) {
 		case IORESOURCE_IO:
 			io = win->res;
@@ -1548,6 +1482,10 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
 		}
 	}
 
+	err = rockchip_cfg_atu(rockchip);
+	if (err)
+		goto err_free_res;
+
 	rockchip->msg_region = devm_ioremap(rockchip->dev,
 					    rockchip->msg_bus_addr, SZ_1M);
 	if (!rockchip->msg_region) {
@@ -1555,34 +1493,30 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
 		goto err_free_res;
 	}
 
-	if (rockchip->deferred) {
-		err = sysfs_create_group(&pdev->dev.kobj, &pcie_attr_group);
-		if (err) {
-			dev_err(&pdev->dev, "SysFS group creation failed\n");
-			goto err_free_res;
-		}
-	} else {
-		err = rockchip_pcie_really_probe(rockchip);
-		if (err) {
-			dev_err(&pdev->dev, "deferred probe failed\n");
-			goto err_free_res;
-		}
+	bus = pci_scan_root_bus(&pdev->dev, 0, &rockchip_pcie_ops, rockchip, &res);
+	if (!bus) {
+		err = -ENOMEM;
+		goto err_free_res;
 	}
+
+	pci_bus_size_bridges(bus);
+	pci_bus_assign_resources(bus);
+	list_for_each_entry(child, &bus->children, node)
+		pcie_bus_configure_settings(child);
+
+	pci_bus_add_devices(bus);
 
 	rockchip->dma_obj = rk_pcie_dma_obj_probe(dev);
 	if (IS_ERR(rockchip->dma_obj)) {
 		dev_err(dev, "failed to prepare dma object\n");
 		err = -EINVAL;
-		goto err_probe_dma;
+		goto err_free_res;
 	}
 
-	return 0;
+	return err;
 
-err_probe_dma:
-	if (rockchip->deferred)
-		sysfs_remove_group(&pdev->dev.kobj, &pcie_attr_group);
 err_free_res:
-	pci_free_resource_list(&rockchip->resources);
+	pci_free_resource_list(&res);
 err_vpcie:
 	if (!IS_ERR(rockchip->vpcie3v3))
 		regulator_disable(rockchip->vpcie3v3);
