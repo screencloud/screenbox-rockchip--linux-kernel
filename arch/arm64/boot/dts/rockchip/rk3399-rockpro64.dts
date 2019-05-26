@@ -809,7 +809,7 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&sdio0_bus4 &sdio0_cmd &sdio0_clk>;
 	sd-uhs-sdr104;
-	status = "disabled";
+	status = "okay";
 };
 
 &sdhci {
@@ -1147,16 +1147,13 @@
 };
 
 &pcie0 {
-	assigned-clocks = <&cru SCLK_PCIEPHY_REF>;
-  assigned-clock-parents = <&cru SCLK_PCIEPHY_REF100M>;
-  assigned-clock-rates = <100000000>;
 	ep-gpios = <&gpio2 RK_PD4 GPIO_ACTIVE_HIGH>;
 	num-lanes = <4>;
 	max-link-speed = <2>;
 	pinctrl-names = "default";
-	pinctrl-0 = <&pcie_clkreqn>;
+	pinctrl-0 = <&pcie_clkreqnb_cpm>;
 	vpcie3v3-supply = <&vcc3v3_pcie>;
-	status = "okay";
+	status = "disabled";
 };
 
 &rga {
