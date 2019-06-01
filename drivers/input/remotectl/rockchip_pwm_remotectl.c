@@ -79,6 +79,9 @@ struct rkxx_remotectl_drvdata {
 	struct timer_list timer;
 	struct tasklet_struct remote_tasklet;
 	struct wake_lock remotectl_wake_lock;
+	struct pinctrl *pinctrl;
+	struct pinctrl_state *active_state;
+	struct pinctrl_state *sleep_state;
 };
 
 static struct rkxx_remotectl_button *remotectl_button;
@@ -451,6 +454,12 @@ static int rk_pwm_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "Can't enable bus periph clk: %d\n", ret);
 		goto error_clk;
 	}
+
+	ddata->pinctrl = devm_pinctrl_get(&pdev->dev);
+	ddata->active_state = pinctrl_lookup_state(ddata->pinctrl, "active");
+	ddata->sleep_state = pinctrl_lookup_state(ddata->pinctrl, "sleep");
+	pinctrl_select_state(ddata->pinctrl, ddata->active_state);
+
 	platform_set_drvdata(pdev, ddata);
 	num = rk_remotectl_get_irkeybd_count(pdev);
 	if (num == 0) {
@@ -597,6 +606,7 @@ static int remotectl_suspend(struct device *dev)
 	cpumask_clear(&cpumask);
 	cpumask_set_cpu(cpu, &cpumask);
 	irq_set_affinity(ddata->irq, &cpumask);
+	pinctrl_select_state(ddata->pinctrl, ddata->sleep_state);
 	return 0;
 }
 
@@ -608,6 +618,7 @@ static int remotectl_resume(struct device *dev)
 	struct rkxx_remotectl_drvdata *ddata = platform_get_drvdata(pdev);
 	int state;
 
+	pinctrl_select_state(ddata->pinctrl, ddata->active_state);
 	cpumask_clear(&cpumask);
 	cpumask_set_cpu(ddata->handle_cpu_id, &cpumask);
 	irq_set_affinity(ddata->irq, &cpumask);
