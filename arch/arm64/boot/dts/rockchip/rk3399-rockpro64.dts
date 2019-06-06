@@ -1202,6 +1202,10 @@
 	status = "okay";
 };
 
+&vpu_mmu {
+	status = "okay";
+};
+
 &vopl {
 	status = "okay";
 	assigned-clocks = <&cru DCLK_VOP1_DIV>;
