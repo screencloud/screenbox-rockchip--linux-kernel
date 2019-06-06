@@ -68,14 +68,14 @@ static void kbase_jd_debugfs_fence_info(struct kbase_jd_atom *atom,
 		struct kbase_fence_cb *cb;
 
 		if (atom->dma_fence.fence) {
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 4, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0))
 			struct fence *fence = atom->dma_fence.fence;
 #else
 			struct dma_fence *fence = atom->dma_fence.fence;
 #endif
 
 			seq_printf(sfile,
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 4, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0))
 					"Sd(%u#%u: %s) ",
 #else
 					"Sd(%llu#%u: %s) ",
@@ -88,14 +88,14 @@ static void kbase_jd_debugfs_fence_info(struct kbase_jd_atom *atom,
 
 		list_for_each_entry(cb, &atom->dma_fence.callbacks,
 				    node) {
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 4, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0))
 			struct fence *fence = cb->fence;
 #else
 			struct dma_fence *fence = cb->fence;
 #endif
 
 			seq_printf(sfile,
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 4, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0))
 					"Wd(%u#%u: %s) ",
 #else
 					"Wd(%llu#%u: %s) ",

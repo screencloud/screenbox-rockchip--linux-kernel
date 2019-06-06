@@ -619,7 +619,7 @@ struct kbase_jd_atom {
 		 * when working with this sub struct */
 #if defined(CONFIG_SYNC_FILE)
 		/* Input fence */
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 4, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0))
 		struct fence *fence_in;
 #else
 		struct dma_fence *fence_in;
@@ -636,7 +636,7 @@ struct kbase_jd_atom {
 		 * regardless of the event_code of the katom (signal also on
 		 * failure).
 		 */
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 4, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0))
 		struct fence *fence;
 #else
 		struct dma_fence *fence;

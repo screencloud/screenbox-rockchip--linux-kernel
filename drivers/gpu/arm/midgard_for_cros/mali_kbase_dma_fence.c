@@ -203,7 +203,7 @@ out:
 }
 
 static void
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 4, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0))
 kbase_dma_fence_cb(struct fence *fence, struct fence_cb *cb)
 #else
 kbase_dma_fence_cb(struct dma_fence *fence, struct dma_fence_cb *cb)
@@ -228,7 +228,7 @@ kbase_dma_fence_add_reservation_callback(struct kbase_jd_atom *katom,
 					 struct reservation_object *resv,
 					 bool exclusive)
 {
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 4, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0))
 	struct fence *excl_fence = NULL;
 	struct fence **shared_fences = NULL;
 #else
@@ -315,7 +315,7 @@ int kbase_dma_fence_wait(struct kbase_jd_atom *katom,
 			 struct kbase_dma_fence_resv_info *info)
 {
 	int err, i;
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 4, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0))
 	struct fence *fence;
 #else
 	struct dma_fence *fence;

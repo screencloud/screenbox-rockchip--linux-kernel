@@ -31,7 +31,7 @@
 static DEFINE_SPINLOCK(kbase_fence_lock);
 
 static const char *
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 4, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0))
 kbase_fence_get_driver_name(struct fence *fence)
 #else
 kbase_fence_get_driver_name(struct dma_fence *fence)
@@ -41,7 +41,7 @@ kbase_fence_get_driver_name(struct dma_fence *fence)
 }
 
 static const char *
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 4, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0))
 kbase_fence_get_timeline_name(struct fence *fence)
 #else
 kbase_fence_get_timeline_name(struct dma_fence *fence)
@@ -51,7 +51,7 @@ kbase_fence_get_timeline_name(struct dma_fence *fence)
 }
 
 static bool
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 4, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0))
 kbase_fence_enable_signaling(struct fence *fence)
 #else
 kbase_fence_enable_signaling(struct dma_fence *fence)
@@ -61,7 +61,7 @@ kbase_fence_enable_signaling(struct dma_fence *fence)
 }
 
 static void
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 4, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0))
 kbase_fence_fence_value_str(struct fence *fence, char *str, int size)
 #else
 kbase_fence_fence_value_str(struct dma_fence *fence, char *str, int size)
@@ -70,7 +70,7 @@ kbase_fence_fence_value_str(struct dma_fence *fence, char *str, int size)
 	snprintf(str, size, "%u", fence->seqno);
 }
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 4, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0))
 const struct fence_ops kbase_fence_ops = {
 	.wait = fence_default_wait,
 #else
@@ -83,7 +83,7 @@ const struct dma_fence_ops kbase_fence_ops = {
 	.fence_value_str = kbase_fence_fence_value_str
 };
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 4, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0))
 struct fence *
 kbase_fence_out_new(struct kbase_jd_atom *katom)
 #else
@@ -91,7 +91,7 @@ struct dma_fence *
 kbase_fence_out_new(struct kbase_jd_atom *katom)
 #endif
 {
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 4, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0))
 	struct fence *fence;
 #else
 	struct dma_fence *fence;
@@ -152,7 +152,7 @@ kbase_fence_free_callbacks(struct kbase_jd_atom *katom)
 	return res;
 }
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 4, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0))
 int
 kbase_fence_add_callback(struct kbase_jd_atom *katom,
 			 struct fence *fence,
@@ -181,13 +181,16 @@ kbase_fence_add_callback(struct kbase_jd_atom *katom,
 	err = dma_fence_add_callback(fence, &kbase_fence_cb->fence_cb,
 				     callback);
 	if (err == -ENOENT) {
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 10, 0))
 		/* Fence signaled, get the completion result */
 		err = dma_fence_get_status(fence);
 
 		/* remap success completion to err code */
 		if (err == 1)
 			err = 0;
-
+#else
+		err = 0;
+#endif
 		kfree(kbase_fence_cb);
 	} else if (err) {
 		kfree(kbase_fence_cb);
