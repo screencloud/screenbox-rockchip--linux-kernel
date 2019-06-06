@@ -130,7 +130,6 @@ static struct rockchip_vpu_control controls[] = {
 		.max_stores = VIDEO_MAX_FRAME,
 		.elem_size = ROCKCHIP_RET_PARAMS_SIZE,
 	},
-	#if DISABLED_VPU
 	[ROCKCHIP_VPU_ENC_CTRL_Y_QUANT_TBL] = {
 		.id = V4L2_CID_JPEG_LUMA_QUANTIZATION,
 		.type = V4L2_CTRL_TYPE_U8,
@@ -147,7 +146,6 @@ static struct rockchip_vpu_control controls[] = {
 		.step = 1,
 		.dims = { 8, 8 }
 	},
-	#endif
 	/* Generic controls. (currently ignored) */
 	{
 		.id = V4L2_CID_MPEG_VIDEO_GOP_SIZE,
@@ -292,7 +290,6 @@ static struct rockchip_vpu_control controls[] = {
 		.step = 1,
 		.default_value = 1,
 	},
-	#ifdef DISABLED_VPU
 	{
 		.id = V4L2_CID_MPEG_VIDEO_H264_SPS_PPS_BEFORE_IDR,
 		.type = V4L2_CTRL_TYPE_BOOLEAN,
@@ -301,7 +298,6 @@ static struct rockchip_vpu_control controls[] = {
 		.step = 1,
 		.default_value = 0,
 	},
-	#endif
 };
 
 static inline const void *get_ctrl_ptr(struct rockchip_vpu_ctx *ctx,
