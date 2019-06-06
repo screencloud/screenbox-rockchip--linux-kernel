@@ -22,18 +22,19 @@
  */
 
 
+#include <linux/mm.h>
 #include <linux/low-mem-notify.h>
 #include <linux/module.h>
 #include <linux/sched.h>
 #include <linux/wait.h>
 #include <linux/poll.h>
 #include <linux/slab.h>
-#include <linux/mm.h>
 
 static DECLARE_WAIT_QUEUE_HEAD(low_mem_wait);
 static atomic_t low_mem_state = ATOMIC_INIT(0);
 unsigned low_mem_margin_percent = 10;
 unsigned long low_mem_threshold;
+unsigned long low_mem_minfree;
 
 struct low_mem_notify_file_info {
 	unsigned long unused;
