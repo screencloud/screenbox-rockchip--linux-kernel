@@ -500,7 +500,7 @@ static u32 get_static_power_locked(struct kbase_device *kbdev,
 }
 
 #if defined(CONFIG_MALI_PWRSOFT_765) || \
-	LINUX_VERSION_CODE >= KERNEL_VERSION(4, 10, 0)
+	LINUX_VERSION_CODE >= KERNEL_VERSION(4, 4, 0)
 static unsigned long kbase_get_static_power(struct devfreq *df,
 					    unsigned long voltage)
 #else
@@ -510,7 +510,7 @@ static unsigned long kbase_get_static_power(unsigned long voltage)
 	struct kbase_ipa_model *model;
 	u32 power = 0;
 #if defined(CONFIG_MALI_PWRSOFT_765) || \
-	LINUX_VERSION_CODE >= KERNEL_VERSION(4, 10, 0)
+	LINUX_VERSION_CODE >= KERNEL_VERSION(4, 4, 0)
 	struct kbase_device *kbdev = dev_get_drvdata(&df->dev);
 #else
 	struct kbase_device *kbdev = kbase_find_device(-1);
@@ -524,7 +524,7 @@ static unsigned long kbase_get_static_power(unsigned long voltage)
 	mutex_unlock(&kbdev->ipa.lock);
 
 #if !(defined(CONFIG_MALI_PWRSOFT_765) || \
-	LINUX_VERSION_CODE >= KERNEL_VERSION(4, 10, 0))
+	LINUX_VERSION_CODE >= KERNEL_VERSION(4, 4, 0))
 	kbase_release_device(kbdev);
 #endif
 
@@ -532,7 +532,7 @@ static unsigned long kbase_get_static_power(unsigned long voltage)
 }
 
 #if defined(CONFIG_MALI_PWRSOFT_765) || \
-	LINUX_VERSION_CODE >= KERNEL_VERSION(4, 10, 0)
+	LINUX_VERSION_CODE >= KERNEL_VERSION(4, 4, 0)
 static unsigned long kbase_get_dynamic_power(struct devfreq *df,
 					     unsigned long freq,
 					     unsigned long voltage)
@@ -545,7 +545,7 @@ static unsigned long kbase_get_dynamic_power(unsigned long freq,
 	u32 power_coeff = 0, power = 0;
 	int err = 0;
 #if defined(CONFIG_MALI_PWRSOFT_765) || \
-	LINUX_VERSION_CODE >= KERNEL_VERSION(4, 10, 0)
+	LINUX_VERSION_CODE >= KERNEL_VERSION(4, 4, 0)
 	struct kbase_device *kbdev = dev_get_drvdata(&df->dev);
 #else
 	struct kbase_device *kbdev = kbase_find_device(-1);
@@ -567,7 +567,7 @@ static unsigned long kbase_get_dynamic_power(unsigned long freq,
 	mutex_unlock(&kbdev->ipa.lock);
 
 #if !(defined(CONFIG_MALI_PWRSOFT_765) || \
-	LINUX_VERSION_CODE >= KERNEL_VERSION(4, 10, 0))
+	LINUX_VERSION_CODE >= KERNEL_VERSION(4, 4, 0))
 	kbase_release_device(kbdev);
 #endif
 
