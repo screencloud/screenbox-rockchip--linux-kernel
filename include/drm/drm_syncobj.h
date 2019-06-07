@@ -49,7 +49,7 @@ struct drm_syncobj {
 	 * This field should not be used directly.  Use drm_syncobj_fence_get
 	 * and drm_syncobj_replace_fence instead.
 	 */
-	struct dma_fence *fence;
+	struct fence *fence;
 	/**
 	 * @cb_list:
 	 * List of callbacks to call when the fence gets replaced
@@ -119,10 +119,10 @@ void drm_syncobj_add_callback(struct drm_syncobj *syncobj,
 void drm_syncobj_remove_callback(struct drm_syncobj *syncobj,
 				 struct drm_syncobj_cb *cb);
 void drm_syncobj_replace_fence(struct drm_syncobj *syncobj,
-			       struct dma_fence *fence);
+			       struct fence *fence);
 int drm_syncobj_fence_get(struct drm_file *file_private,
 			  u32 handle,
-			  struct dma_fence **fence);
+			  struct fence **fence);
 void drm_syncobj_free(struct kref *kref);
 
 #endif

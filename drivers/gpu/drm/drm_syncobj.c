@@ -55,6 +55,15 @@
 #include "drm_internal.h"
 #include <drm/drm_syncobj.h>
 
+#define dma_fence_context_alloc(a) fence_context_alloc(a)
+#define dma_fence_init(a, b, c, d, e) fence_init(a, b, c, d, e)
+#define dma_fence_get(a) fence_get(a)
+#define dma_fence_put(a) fence_put(a)
+#define dma_fence_signal(a) fence_signal(a)
+#define dma_fence_is_signaled(a) fence_is_signaled(a)
+#define dma_fence_add_callback(a, b, c) fence_add_callback(a, b, c)
+#define dma_fence_remove_callback(a, b) fence_remove_callback(a, b)
+
 /**
  * drm_syncobj_find - lookup and reference a sync object.
  * @file_private: drm file private pointer
@@ -89,7 +98,7 @@ static void drm_syncobj_add_callback_locked(struct drm_syncobj *syncobj,
 }
 
 static int drm_syncobj_fence_get_or_add_callback(struct drm_syncobj *syncobj,
-						 struct dma_fence **fence,
+						 struct fence **fence,
 						 struct drm_syncobj_cb *cb,
 						 drm_syncobj_func_t func)
 {
@@ -161,9 +170,9 @@ EXPORT_SYMBOL(drm_syncobj_remove_callback);
  */
 void drm_syncobj_replace_fence(struct drm_file *file_private,
 			       struct drm_syncobj *syncobj,
-			       struct dma_fence *fence)
+			       struct fence *fence)
 {
-	struct dma_fence *old_fence;
+	struct fence *old_fence;
 	struct drm_syncobj_cb *cur, *tmp;
 
 	if (fence)
@@ -189,7 +198,7 @@ EXPORT_SYMBOL(drm_syncobj_replace_fence);
 
 int drm_syncobj_fence_get(struct drm_file *file_private,
 			  u32 handle,
-			  struct dma_fence **fence)
+			  struct fence **fence)
 {
 	struct drm_syncobj *syncobj = drm_syncobj_find(file_private, handle);
 	int ret = 0;
@@ -470,12 +479,12 @@ drm_syncobj_fd_to_handle_ioctl(struct drm_device *dev, void *data,
 
 struct syncobj_wait_entry {
 	struct task_struct *task;
-	struct dma_fence *fence;
+	struct fence *fence;
 	struct dma_fence_cb fence_cb;
 	struct drm_syncobj_cb syncobj_cb;
 };
 
-static void syncobj_wait_fence_func(struct dma_fence *fence,
+static void syncobj_wait_fence_func(struct fence *fence,
 				    struct dma_fence_cb *cb)
 {
 	struct syncobj_wait_entry *wait =
@@ -502,7 +511,7 @@ static signed long drm_syncobj_array_wait_timeout(struct drm_syncobj **syncobjs,
 						  uint32_t *idx)
 {
 	struct syncobj_wait_entry *entries;
-	struct dma_fence *fence;
+	struct fence *fence;
 	signed long ret;
 	uint32_t signaled_count, i;
 
