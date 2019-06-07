@@ -111,13 +111,13 @@ drm_syncobj_put(struct drm_syncobj *obj)
 	kref_put(&obj->refcount, drm_syncobj_free);
 }
 
-static inline struct dma_fence *
+static inline struct fence *
 drm_syncobj_fence_get(struct drm_syncobj *syncobj)
 {
-	struct dma_fence *fence;
+	struct fence *fence;
 
 	rcu_read_lock();
-	fence = dma_fence_get_rcu_safe(&syncobj->fence);
+	fence = fence_get_rcu_safe(&syncobj->fence);
 	rcu_read_unlock();
 
 	return fence;
@@ -132,9 +132,6 @@ void drm_syncobj_remove_callback(struct drm_syncobj *syncobj,
 				 struct drm_syncobj_cb *cb);
 void drm_syncobj_replace_fence(struct drm_syncobj *syncobj,
 			       struct fence *fence);
-int drm_syncobj_fence_get(struct drm_file *file_private,
-			  u32 handle,
-			  struct fence **fence);
 void drm_syncobj_free(struct kref *kref);
 
 #endif

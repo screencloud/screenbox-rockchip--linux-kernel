@@ -168,8 +168,7 @@ EXPORT_SYMBOL(drm_syncobj_remove_callback);
  *
  * This replaces the fence on a sync object.
  */
-void drm_syncobj_replace_fence(struct drm_file *file_private,
-			       struct drm_syncobj *syncobj,
+void drm_syncobj_replace_fence(struct drm_syncobj *syncobj,
 			       struct fence *fence)
 {
 	struct fence *old_fence;
@@ -195,25 +194,6 @@ void drm_syncobj_replace_fence(struct drm_file *file_private,
 	dma_fence_put(old_fence);
 }
 EXPORT_SYMBOL(drm_syncobj_replace_fence);
-
-int drm_syncobj_fence_get(struct drm_file *file_private,
-			  u32 handle,
-			  struct fence **fence)
-{
-	struct drm_syncobj *syncobj = drm_syncobj_find(file_private, handle);
-	int ret = 0;
-
-	if (!syncobj)
-		return -ENOENT;
-
-	*fence = drm_syncobj_fence_get(syncobj);
-	if (!*fence) {
-		ret = -EINVAL;
-	}
-	drm_syncobj_put(syncobj);
-	return ret;
-}
-EXPORT_SYMBOL(drm_syncobj_fence_get);
 
 /**
  * drm_syncobj_free - free a sync object.
@@ -480,12 +460,12 @@ drm_syncobj_fd_to_handle_ioctl(struct drm_device *dev, void *data,
 struct syncobj_wait_entry {
 	struct task_struct *task;
 	struct fence *fence;
-	struct dma_fence_cb fence_cb;
+	struct fence_cb fence_cb;
 	struct drm_syncobj_cb syncobj_cb;
 };
 
 static void syncobj_wait_fence_func(struct fence *fence,
-				    struct dma_fence_cb *cb)
+				    struct fence_cb *cb)
 {
 	struct syncobj_wait_entry *wait =
 		container_of(cb, struct syncobj_wait_entry, fence_cb);
