@@ -269,7 +269,9 @@ rockchip_drm_check_and_block_dmcfreq(struct rockchip_atomic_commit *commit)
 			to_rockchip_crtc_state(old_crtc_state);
 
 		if (!old_s->needs_dmcfreq_block && s->needs_dmcfreq_block) {
-			rockchip_dmcfreq_block(priv->devfreq);
+			if (priv->devfreq) {
+					rockchip_dmcfreq_block(priv->devfreq);
+			}
 			DRM_DEV_DEBUG_KMS(dev->dev,
 				"%s: vblank period too short, blocking dmcfreq (crtc = %d)\n",
 				__func__, drm_crtc_index(crtc));
@@ -294,7 +296,9 @@ rockchip_drm_check_and_unblock_dmcfreq(struct rockchip_atomic_commit *commit)
 			to_rockchip_crtc_state(old_crtc_state);
 
 		if (old_s->needs_dmcfreq_block && !s->needs_dmcfreq_block) {
-			rockchip_dmcfreq_unblock(priv->devfreq);
+			if (priv->devfreq) {
+					rockchip_dmcfreq_unblock(priv->devfreq);
+			}
 			DRM_DEV_DEBUG_KMS(dev->dev,
 				"%s: vblank period long enough, unblocking dmcfreq (crtc = %d)\n",
 				__func__, drm_crtc_index(crtc));

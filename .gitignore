@@ -42,6 +42,10 @@ Module.symvers
 #
 # Top-level generic files
 #
+/boot.img
+/kernel.img
+/resource.img
+/zboot.img
 /tags
 /TAGS
 /linux
@@ -74,9 +78,6 @@ Module.symvers
 include/config
 include/generated
 arch/*/include/generated
-
-# kernelconfig build directory
-/build/
 
 # stgit generated dirs
 patches-*
@@ -116,3 +117,7 @@ all.config
 
 # Kdevelop4
 *.kdev4
+
+# fetched Android config fragments
+android/configs/android-*.cfg
+out/

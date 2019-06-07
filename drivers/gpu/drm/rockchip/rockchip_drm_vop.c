@@ -658,7 +658,9 @@ static void vop_crtc_disable(struct drm_crtc *crtc)
 	if (!vop->is_enabled)
 		return;
 
-	rockchip_dmcfreq_unregister_clk_sync_nb(priv->devfreq, &vop->dmc_nb);
+	if (priv->devfreq) {
+		rockchip_dmcfreq_unregister_clk_sync_nb(priv->devfreq, &vop->dmc_nb);
+	}
 
 	drm_crtc_vblank_off(crtc);
 
@@ -1323,7 +1325,10 @@ static void vop_crtc_enable(struct drm_crtc *crtc)
 	clk_set_rate(vop->dclk, adjusted_mode->clock * 1000);
 
 	VOP_REG_SET(vop, common, standby, 0);
-	rockchip_dmcfreq_register_clk_sync_nb(priv->devfreq, &vop->dmc_nb);
+
+	if (priv->devfreq) {
+		rockchip_dmcfreq_register_clk_sync_nb(priv->devfreq, &vop->dmc_nb);
+	}
 }
 
 static int dmc_notify(struct notifier_block *nb,

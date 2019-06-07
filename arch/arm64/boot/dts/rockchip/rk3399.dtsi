@@ -65,8 +65,8 @@
 		i2c6 = &i2c6;
 		i2c7 = &i2c7;
 		i2c8 = &i2c8;
-		mmc0 = &sdhci;
-		mmc1 = &sdmmc;
+		mmc0 = &sdmmc;
+		mmc1 = &sdhci;
 		mmc2 = &sdio0;
 		serial0 = &uart0;
 		serial1 = &uart1;
@@ -802,7 +802,7 @@
 				};
 			};
 
-			cooling-maps {
+			cooling_maps: cooling-maps {
 				map0 {
 					trip = <&target>;
 					cooling-device =
@@ -1714,9 +1714,15 @@
 	hdmi: hdmi@ff940000 {
 		compatible = "rockchip,rk3399-dw-hdmi";
 		reg = <0x0 0xff940000 0x0 0x20000>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&hdmi_i2c_xfer>;
 		interrupts = <GIC_SPI 23 IRQ_TYPE_LEVEL_HIGH 0>;
-		clocks = <&cru PCLK_HDMI_CTRL>, <&cru SCLK_HDMI_SFR>, <&cru PLL_VPLL>, <&cru PCLK_VIO_GRF>;
-		clock-names = "iahb", "isfr", "vpll", "grf";
+		clocks = <&cru PCLK_HDMI_CTRL>,
+			 <&cru SCLK_HDMI_SFR>,
+			 <&cru PLL_VPLL>,
+			 <&cru PCLK_VIO_GRF>,
+			 <&cru SCLK_HDMI_CEC>;
+		clock-names = "iahb", "isfr", "vpll", "grf", "cec";
 		power-domains = <&power RK3399_PD_HDCP>;
 		reg-io-width = <4>;
 		rockchip,grf = <&grf>;
@@ -2168,8 +2174,11 @@
 					<3 28 RK_FUNC_1 &pcfg_pull_none>,
 					<3 29 RK_FUNC_1 &pcfg_pull_none>,
 					<3 30 RK_FUNC_1 &pcfg_pull_none>,
-					<3 31 RK_FUNC_1 &pcfg_pull_none>,
-					<4 0 RK_FUNC_1 &pcfg_pull_none>;
+					<3 31 RK_FUNC_1 &pcfg_pull_none>;
+			};
+
+			i2s_8ch_mclk: i2s-8ch-mclk {
+				rockchip,pins = <4 0 RK_FUNC_1 &pcfg_pull_none>;
 			};
 		};
 
@@ -2548,6 +2557,11 @@
 			pwm2_pin: pwm2-pin {
 				rockchip,pins =
 					<1 19 RK_FUNC_1 &pcfg_pull_none>;
+			};
+
+			pwm2_pin_pull_down: pwm2-pin-pull-down {
+				rockchip,pins =
+					<1 19 RK_FUNC_1 &pcfg_pull_down>;
 			};
 		};
 
