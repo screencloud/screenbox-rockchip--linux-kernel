@@ -67,7 +67,6 @@ static inline struct fence_array *to_fence_array(struct fence *fence)
 }
 
 struct fence_array *fence_array_create(int num_fences, struct fence **fences,
-				       u64 context, unsigned seqno,
-				       bool signal_on_any);
+				       u64 context, unsigned seqno);
 
 #endif /* __LINUX_FENCE_ARRAY_H */
