@@ -36,6 +36,18 @@ bool rockchip_fb_is_logo(struct drm_framebuffer *fb)
 	return rk_fb && rk_fb->logo;
 }
 
+
+struct drm_gem_object *rockchip_fb_get_gem_obj(struct drm_framebuffer *fb,
+					       unsigned int plane)
+{
+	struct rockchip_drm_fb *rk_fb = to_rockchip_fb(fb);
+
+	if (plane >= ROCKCHIP_MAX_FB_BUFFER)
+		return NULL;
+
+	return rk_fb->obj[plane];
+}
+
 dma_addr_t rockchip_fb_get_dma_addr(struct drm_framebuffer *fb,
 				    unsigned int plane)
 {
