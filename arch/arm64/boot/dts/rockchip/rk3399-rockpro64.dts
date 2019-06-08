@@ -9,7 +9,6 @@
 #include <dt-bindings/input/input.h>
 #include "rk3399.dtsi"
 #include "rk3399-opp.dtsi"
-#include "rk3399-vop-clk-set.dtsi"
 
 / {
 	model = "Pine64 RockPro64";
@@ -204,19 +203,6 @@
 		};
 	};
 
-	hdmi-sound {
-		compatible = "simple-audio-card";
-		simple-audio-card,format = "i2s";
-		simple-audio-card,name = "HDMI";
-		simple-audio-card,mclk-fs = <256>;
-		simple-audio-card,cpu {
-			sound-dai = <&i2s2>;
-		};
-		simple-audio-card,codec {
-			sound-dai = <&hdmi>;
-		};
-	};
-
 	es8316-sound {
 		status = "okay";
 		compatible = "simple-audio-card";
@@ -294,27 +280,27 @@
 };
 
 &cdn_dp {
-	status = "disabled";
-	//extcon = <&fusb0>;
+	status = "okay";
+	extcon = <&fusb0>;
 };
 
-&cooling_maps {
-	map3 {
-		trip = <&threshold>;
-		cooling-device = <&fan0 0 1>;
-		contribution = <4096>;
-	};
-	map4 {
-		trip = <&target>;
-		cooling-device = <&fan0 1 2>;
-		contribution = <4096>;
-	};
-	map5 {
-		trip = <&soc_crit>;
-		cooling-device = <&fan0 2 3>;
-		contribution = <4096>;
-	};
-};
+// &cooling_maps {
+// 	map3 {
+// 		trip = <&threshold>;
+// 		cooling-device = <&fan0 0 1>;
+// 		contribution = <4096>;
+// 	};
+// 	map4 {
+// 		trip = <&target>;
+// 		cooling-device = <&fan0 1 2>;
+// 		contribution = <4096>;
+// 	};
+// 	map5 {
+// 		trip = <&soc_crit>;
+// 		cooling-device = <&fan0 2 3>;
+// 		contribution = <4096>;
+// 	};
+// };
 
 &cpu_l0 {
 	cpu-supply = <&vdd_cpu_l>;
@@ -390,12 +376,6 @@
 		};
 
 	};
-};
-
-&display_subsystem {
-	status = "okay";
-
-	ports = <&vopb_out>, <&vopl_out>;
 };
 
 &emmc_phy {
@@ -640,7 +620,7 @@
 };
 
 &i2c1 {
-	status = "disabled";
+	status = "okay";
 	i2c-scl-rising-time-ns = <168>;
 	i2c-scl-falling-time-ns = <4>;
 
@@ -650,32 +630,34 @@
 		reg = <0x11>;
 		clocks = <&cru SCLK_I2S_8CH_OUT>;
 		clock-names = "mclk";
-		pinctrl-names = "default";
-		pinctrl-0 = <&i2s_8ch_mclk>;
 		hp-det-gpio = <&gpio1 RK_PB0 GPIO_ACTIVE_LOW>;
 	};
 };
 
+&i2c3 {
+	status = "okay";
+};
+
 &i2c4 {
-	status = "disabled";
+	status = "okay";
 
 	fusb0: fusb30x@22 {
-		compatible = "fairchild,fusb302"; // TODO: not supported
+		compatible = "fairchild,fusb302";
 		reg = <0x22>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&fusb0_int>;
 		vbus-5v-gpios = <&gpio1 RK_PA3 GPIO_ACTIVE_HIGH>;
 		int-n-gpios = <&gpio1 RK_PA2 GPIO_ACTIVE_HIGH>;
-		status = "disabled";
+		status = "okay";
 	};
 };
 
 &i2c8 {
-	status = "disabled";
+	status = "okay";
 };
 
 &i2s1 {
-	status = "disabled";
+	status = "okay";
 	rockchip,i2s-broken-burst-len;
 	rockchip,playback-channels = <8>;
 	rockchip,capture-channels = <8>;
@@ -712,12 +694,13 @@
 
 &hdmi {
 	status = "okay";
-	// rockchip,phy-table =
-	// 	<74250000 0x8009 0x0004 0x0272>,
-	// 	<165000000 0x802b 0x0004 0x0209>,
-	// 	<297000000 0x8039 0x0005 0x028d>,
-	// 	<594000000 0x8039 0x0000 0x019d>,
-	// 	<000000000 0x0000 0x0000 0x0000>;
+	ddc-i2c-bus = <&i2c3>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&hdmi_cec>;
+};
+
+&hdmi_sound {
+	status = "okay";
 };
 
 &io_domains {
@@ -734,17 +717,17 @@
 	status = "disabled";
 };
 
-&threshold {
-	temperature = <80000>;
-};
+// &threshold {
+// 	temperature = <80000>;
+// };
 
-&target {
-	temperature = <95000>;
-};
+// &target {
+// 	temperature = <95000>;
+// };
 
-&soc_crit {
-	temperature = <100000>;
-};
+// &soc_crit {
+// 	temperature = <100000>;
+// };
 
 &sdmmc {
 	clock-frequency = <50000000>;
@@ -832,7 +815,7 @@
 };
 
 &tcphy0 {
-	//extcon = <&fusb0>;
+	extcon = <&fusb0>;
 	status = "okay";
 };
 
@@ -851,7 +834,7 @@
 
 &u2phy0 {
 	status = "okay";
-	//extcon = <&fusb0>;
+	extcon = <&fusb0>;
 
 	u2phy0_otg: otg-port {
 		status = "okay";
@@ -903,7 +886,7 @@
 };
 
 &usbdrd3_0 {
-	//extcon = <&fusb0>;
+	extcon = <&fusb0>;
 	status = "okay";
 };
 
@@ -1116,15 +1099,15 @@
 	num-lanes = <4>;
 	max-link-speed = <2>;
 	pinctrl-names = "default";
-	pinctrl-0 = <&pcie_clkreqn>;
+	pinctrl-0 = <&pcie_clkreqn_cpm>;
 	vpcie3v3-supply = <&vcc3v3_pcie>;
 	bus-scan-delay-ms = <1000>;
 	status = "disabled";
 };
 
-&vdec {
-	status = "okay";
-};
+// &vdec {
+// 	status = "okay";
+// };
 
 &vdec_mmu {
 	status = "okay";
