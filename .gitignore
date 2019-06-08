@@ -96,6 +96,7 @@ arch/*/include/generated
 
 # kernelconfig build directory
 /build/
+/out/
 
 # stgit generated dirs
 patches-*
