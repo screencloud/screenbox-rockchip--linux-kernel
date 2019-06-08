@@ -119,7 +119,7 @@
 
 	spdif_out: spdif-out {
 		status = "okay";
-		compatible = "linux,spdif-dit"; // TODO: ayufan: not enabled
+		compatible = "linux,spdif-dit";
 		#sound-dai-cells = <0>;
 	};
 
@@ -140,7 +140,7 @@
 	};
 
 	wireless-wlan {
-		compatible = "wlan-platdata";
+		compatible = "wlan-platdata"; // TODO: not supported
 		rockchip,grf = <&grf>;
 		wifi_chip_type = "ap6354";
 		sdio_vref = <1800>;
@@ -149,7 +149,7 @@
 	};
 
 	wireless-bluetooth {
-		compatible = "bluetooth-platdata";
+		compatible = "bluetooth-platdata"; // TODO: not supported
 		clocks = <&rk808 1>;
 		clock-names = "ext_clock";
 		uart_rts_gpios = <&gpio2 19 GPIO_ACTIVE_LOW>;
@@ -162,19 +162,17 @@
 		status = "okay";
 	};
 
-	test-power {
-		status = "okay";
-	};
-
 	leds {
 		status = "okay";
 		compatible = "gpio-leds";
+
 		work-led {
 			gpios = <&gpio0 RK_PB3 GPIO_ACTIVE_HIGH>;
 			linux,default-trigger = "none";
 			default-state = "on";
 			mode = <0x23>;
 		};
+
 		diy-led {
 			gpios = <&gpio0 RK_PA2 GPIO_ACTIVE_HIGH>;
 			linux,default-trigger = "none";
@@ -193,7 +191,7 @@
 	};
 
 	rk_key: rockchip-key {
-		compatible = "rockchip,key";
+		compatible = "rockchip,key"; // TODO: not supported
 		status = "okay";
 
 		io-channels = <&saradc 1>;
@@ -660,8 +658,9 @@
 
 &i2c4 {
 	status = "disabled";
+
 	fusb0: fusb30x@22 {
-		compatible = "fairchild,fusb302";
+		compatible = "fairchild,fusb302"; // TODO: not supported
 		reg = <0x22>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&fusb0_int>;
