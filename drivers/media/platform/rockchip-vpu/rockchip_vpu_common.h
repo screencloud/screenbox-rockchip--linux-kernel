@@ -170,10 +170,6 @@ enum rockchip_vpu_state {
  * @pdev:		Pointer to VPU platform device.
  * @dev:		Pointer to device for convenient logging using
  *			dev_ macros.
- * @alloc_ctx:		VB2 allocator context
- *			(for allocations without kernel mapping).
- * @alloc_ctx_vm:	VB2 allocator context
- *			(for allocations with kernel mapping).
  * @aclk:		Handle of ACLK clock.
  * @hclk:		Handle of HCLK clock.
  * @sclk_cabac:		Handle of SCLK CA clock.
@@ -202,8 +198,6 @@ struct rockchip_vpu_dev {
 	struct video_device *vfd_enc;
 	struct platform_device *pdev;
 	struct device *dev;
-	void *alloc_ctx;
-	void *alloc_ctx_vm;
 	struct clk *aclk;
 	struct clk *hclk;
 	struct clk *sclk_cabac;

@@ -617,12 +617,14 @@ static int vidioc_qbuf(struct file *file, void *priv, struct v4l2_buffer *buf)
 
 	switch (buf->type) {
 	case V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE:
-		ret = vb2_qbuf(&ctx->vq_src, buf);
+		// TODO(ayufan): pass mdev?
+		ret = vb2_qbuf(&ctx->vq_src, NULL, buf);
 		vpu_debug(4, "OUTPUT_MPLANE : vb2_qbuf return %d\n", ret);
 		break;
 
 	case V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE:
-		ret = vb2_qbuf(&ctx->vq_dst, buf);
+		// TODO(ayufan): pass mdev?
+		ret = vb2_qbuf(&ctx->vq_dst, NULL, buf);
 		vpu_debug(4, "CAPTURE_MPLANE: vb2_qbuf return %d\n", ret);
 		break;
 
@@ -859,8 +861,9 @@ static int rockchip_vpu_dec_s_ctrl(struct v4l2_ctrl *ctrl)
 		break;
 
 	case V4L2_CID_MPEG_VIDEO_H264_DECODE_PARAM:
-		if (ctrl->store)
-			break;
+		// TODO(ayufan): is that needed?
+		// if (ctrl->store)
+		// 	break;
 		if (dev->variant->needs_dpb_map)
 			rockchip_vpu_dec_set_dpb(ctx, ctrl);
 		break;
@@ -924,10 +927,9 @@ static const struct v4l2_ioctl_ops rockchip_vpu_dec_ioctl_ops = {
 };
 
 static int rockchip_vpu_queue_setup(struct vb2_queue *vq,
-				  const void *parg,
 				  unsigned int *buf_count,
 				  unsigned int *plane_count,
-				  unsigned int psize[], void *allocators[])
+				  unsigned int psize[], struct device *alloc_devs[])
 {
 	struct rockchip_vpu_ctx *ctx = fh_to_ctx(vq->drv_priv);
 	int ret = 0;
@@ -945,7 +947,7 @@ static int rockchip_vpu_queue_setup(struct vb2_queue *vq,
 			*buf_count = VIDEO_MAX_FRAME;
 
 		psize[0] = ctx->src_fmt.plane_fmt[0].sizeimage;
-		allocators[0] = ctx->dev->alloc_ctx;
+		alloc_devs[0] = ctx->dev->dev;
 		vpu_debug(0, "output psize[%d]: %d\n", 0, psize[0]);
 		break;
 
@@ -959,7 +961,7 @@ static int rockchip_vpu_queue_setup(struct vb2_queue *vq,
 			*buf_count = VIDEO_MAX_FRAME;
 
 		psize[0] = round_up(ctx->dst_fmt.plane_fmt[0].sizeimage, 8);
-		allocators[0] = ctx->dev->alloc_ctx;
+		alloc_devs[0] = ctx->dev->dev;
 
 		if (ctx->vpu_src_fmt->fourcc == V4L2_PIX_FMT_H264_SLICE ||
 		    ctx->vpu_src_fmt->fourcc == V4L2_PIX_FMT_VP9_FRAME) {
@@ -1201,9 +1203,10 @@ const struct v4l2_ioctl_ops *rockchip_get_dec_v4l2_ioctl_ops(void)
 
 static void rockchip_vpu_dec_prepare_run(struct rockchip_vpu_ctx *ctx)
 {
-	struct vb2_v4l2_buffer *vb2_src = &ctx->run.src->b;
+	// struct vb2_v4l2_buffer *vb2_src = &ctx->run.src->b;
 
-	v4l2_ctrl_apply_store(&ctx->ctrl_handler, vb2_src->config_store);
+	// TODO(ayufan): what to do here?
+	// v4l2_ctrl_apply_store(&ctx->ctrl_handler, vb2_src->config_store);
 
 	if (ctx->vpu_src_fmt->fourcc == V4L2_PIX_FMT_H264_SLICE) {
 		ctx->run.h264d.sps = get_ctrl_ptr(ctx,

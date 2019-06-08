@@ -768,12 +768,14 @@ static int vidioc_qbuf(struct file *file, void *priv, struct v4l2_buffer *buf)
 
 	switch (buf->type) {
 	case V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE:
-		ret = vb2_qbuf(&ctx->vq_src, buf);
+		// TODO(ayufan): pass mdev?
+		ret = vb2_qbuf(&ctx->vq_src, NULL, buf);
 		vpu_debug(4, "vb2_qbuf return %d\n", ret);
 		break;
 
 	case V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE:
-		ret = vb2_qbuf(&ctx->vq_dst, buf);
+		// TODO(ayufan): pass mdev?
+		ret = vb2_qbuf(&ctx->vq_dst, NULL, buf);
 		vpu_debug(4, "vb2_qbuf return %d\n", ret);
 		break;
 
@@ -1179,10 +1181,9 @@ static const struct v4l2_ioctl_ops rockchip_vpu_enc_ioctl_ops = {
 };
 
 static int rockchip_vpu_queue_setup(struct vb2_queue *vq,
-				  const void *parg,
 				  unsigned int *buf_count,
 				  unsigned int *plane_count,
-				  unsigned int psize[], void *allocators[])
+				  unsigned int psize[], struct device *alloc_devs[])
 {
 	struct rockchip_vpu_ctx *ctx = fh_to_ctx(vq->drv_priv);
 	int ret = 0;
@@ -1202,7 +1203,7 @@ static int rockchip_vpu_queue_setup(struct vb2_queue *vq,
 
 		psize[0] = ctx->dst_fmt.plane_fmt[0].sizeimage;
 		/* Kernel mapping necessary for bitstream post processing. */
-		allocators[0] = ctx->dev->alloc_ctx_vm;
+		alloc_devs[0] = ctx->dev->dev;
 		vpu_debug(0, "capture psize[%d]: %d\n", 0, psize[0]);
 		break;
 
@@ -1218,7 +1219,7 @@ static int rockchip_vpu_queue_setup(struct vb2_queue *vq,
 		for (i = 0; i < ctx->vpu_src_fmt->num_planes; ++i) {
 			psize[i] = ctx->src_fmt.plane_fmt[i].sizeimage;
 			vpu_debug(0, "output psize[%d]: %d\n", i, psize[i]);
-			allocators[i] = ctx->dev->alloc_ctx;
+			alloc_devs[i] = ctx->dev->dev;
 		}
 		break;
 
@@ -1451,10 +1452,10 @@ const struct v4l2_ioctl_ops *rockchip_get_enc_v4l2_ioctl_ops(void)
 
 static void rockchip_vpu_enc_prepare_run(struct rockchip_vpu_ctx *ctx)
 {
-	struct vb2_v4l2_buffer *vb2_src = &ctx->run.src->b;
-	unsigned config_store = vb2_src->config_store;
-
-	v4l2_ctrl_apply_store(&ctx->ctrl_handler, config_store);
+	// struct vb2_v4l2_buffer *vb2_src = &ctx->run.src->b;
+	// unsigned config_store = vb2_src->config_store;
+	// TODO(ayufan): what to do here?
+	// v4l2_ctrl_apply_store(&ctx->ctrl_handler, config_store);
 
 	if (ctx->vpu_dst_fmt->fourcc == V4L2_PIX_FMT_VP8) {
 		memcpy(ctx->run.dst->vp8e.header,

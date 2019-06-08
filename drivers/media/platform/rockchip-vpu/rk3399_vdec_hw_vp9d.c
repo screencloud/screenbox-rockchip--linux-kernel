@@ -1217,7 +1217,8 @@ static void vp9d_probs_update(struct rockchip_vpu_ctx *ctx,
 
 		memset(&cs, 0, sizeof(cs));
 
-		cs.config_store = ctx->run.src->b.config_store;
+		// TODO(ayufan): what to do here?
+		// cs.config_store = ctx->run.src->b.config_store;
 		cs.count = 1;
 		cs.controls = vmalloc(sizeof(struct v4l2_ext_control));
 		if (!cs.controls) {
@@ -1229,7 +1230,8 @@ static void vp9d_probs_update(struct rockchip_vpu_ctx *ctx,
 		cs.controls[0].ptr = entropy;
 		cs.controls[0].size = sizeof(*entropy);
 
-		if (v4l2_s_ext_ctrls(&ctx->fh, &ctx->ctrl_handler, &cs) < 0)
+		// TODO(ayufan): pass mdev?
+		if (v4l2_s_ext_ctrls(&ctx->fh, &ctx->ctrl_handler, ctx->dev->v4l2_dev.mdev, &cs) < 0)
 			vpu_err("try to store the adapted entropy failed\n");
 
 		vfree(cs.controls);

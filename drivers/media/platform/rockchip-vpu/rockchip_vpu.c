@@ -234,7 +234,8 @@ void rockchip_vpu_run_done(struct rockchip_vpu_ctx *ctx,
 			struct vb2_v4l2_buffer *vb2_src = &ctx->run.src->b;
 			struct vb2_v4l2_buffer *vb2_dst = &ctx->run.dst->b;
 
-			vb2_dst->timestamp = vb2_src->timestamp;
+			// TODO(ayufan): timestamp => timecode?
+			vb2_dst->timecode = vb2_src->timecode;
 			vb2_buffer_done(&vb2_src->vb2_buf, result);
 			vb2_buffer_done(&vb2_dst->vb2_buf, result);
 		}
@@ -334,7 +335,8 @@ int rockchip_vpu_ctrls_setup(struct rockchip_vpu_ctx *ctx,
 			cfg.id = controls[i].id;
 			cfg.min = controls[i].minimum;
 			cfg.max = controls[i].maximum;
-			cfg.max_stores = controls[i].max_stores;
+			// TODO(ayufan): what to do here?
+			// cfg.max_stores = controls[i].max_stores;
 			cfg.def = controls[i].default_value;
 			cfg.name = controls[i].name;
 			cfg.type = controls[i].type;
@@ -383,8 +385,9 @@ int rockchip_vpu_ctrls_setup(struct rockchip_vpu_ctx *ctx,
 			ctx->ctrls[i]->flags |= V4L2_CTRL_FLAG_VOLATILE;
 		if (controls[i].is_read_only && ctx->ctrls[i])
 			ctx->ctrls[i]->flags |= V4L2_CTRL_FLAG_READ_ONLY;
-		if (controls[i].can_store && ctx->ctrls[i])
-			ctx->ctrls[i]->flags |= V4L2_CTRL_FLAG_CAN_STORE;
+		// TODO(ayufan): what to do here?
+		// if (controls[i].can_store && ctx->ctrls[i])
+		// 	ctx->ctrls[i]->flags |= V4L2_CTRL_FLAG_CAN_STORE;
 	}
 
 	v4l2_ctrl_handler_setup(&ctx->ctrl_handler);
@@ -463,6 +466,11 @@ static int rockchip_vpu_open(struct file *filp)
 	/* Init videobuf2 queue for CAPTURE */
 	q = &ctx->vq_dst;
 	q->type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+	q->dma_attrs = DMA_ATTR_ALLOC_SINGLE_PAGES | DMA_ATTR_NO_KERNEL_MAPPING;
+	if (vdev == dev->vfd_enc) {
+		// Kernel mapping necessary for bitstream post processing.
+		q->dma_attrs &= ~DMA_ATTR_NO_KERNEL_MAPPING;
+	}
 	q->drv_priv = &ctx->fh;
 	q->io_modes = VB2_MMAP | VB2_USERPTR | VB2_DMABUF;
 	q->lock = &dev->vpu_mutex;
@@ -472,7 +480,7 @@ static int rockchip_vpu_open(struct file *filp)
 		q->ops = rockchip_get_enc_queue_ops();
 	} else if (vdev == dev->vfd_dec) {
 		q->ops = rockchip_get_dec_queue_ops();
-		q->use_dma_bidirectional = 1;
+		q->bidirectional = 1;
 	}
 
 	q->mem_ops = &vb2_dma_contig_memops;
@@ -488,6 +496,7 @@ static int rockchip_vpu_open(struct file *filp)
 	q = &ctx->vq_src;
 	q->type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
 	q->drv_priv = &ctx->fh;
+	q->dma_attrs = DMA_ATTR_ALLOC_SINGLE_PAGES | DMA_ATTR_NO_KERNEL_MAPPING;
 	q->io_modes = VB2_MMAP | VB2_USERPTR | VB2_DMABUF;
 	q->lock = &dev->vpu_mutex;
 	q->buf_struct_size = sizeof(struct rockchip_vpu_buf);
@@ -732,8 +741,6 @@ static int rockchip_vpu_probe(struct platform_device *pdev)
 {
 	const struct of_device_id *match;
 	struct rockchip_vpu_dev *vpu = NULL;
-	DEFINE_DMA_ATTRS(attrs_novm);
-	DEFINE_DMA_ATTRS(attrs_nohugepage);
 	int ret = 0;
 
 	vpu_debug_enter();
@@ -766,32 +773,10 @@ static int rockchip_vpu_probe(struct platform_device *pdev)
 	pm_runtime_use_autosuspend(vpu->dev);
 	pm_runtime_enable(vpu->dev);
 
-	/*
-	 * We'll do mostly sequential access, so sacrifice TLB efficiency for
-	 * faster allocation.
-	 */
-	dma_set_attr(DMA_ATTR_ALLOC_SINGLE_PAGES, &attrs_novm);
-
-	dma_set_attr(DMA_ATTR_NO_KERNEL_MAPPING, &attrs_novm);
-	vpu->alloc_ctx = vb2_dma_contig_init_ctx_attrs(&pdev->dev,
-								&attrs_novm);
-	if (IS_ERR(vpu->alloc_ctx)) {
-		ret = PTR_ERR(vpu->alloc_ctx);
-		goto err_dma_contig;
-	}
-
-	dma_set_attr(DMA_ATTR_ALLOC_SINGLE_PAGES, &attrs_nohugepage);
-	vpu->alloc_ctx_vm = vb2_dma_contig_init_ctx_attrs(&pdev->dev,
-							  &attrs_nohugepage);
-	if (IS_ERR(vpu->alloc_ctx_vm)) {
-		ret = PTR_ERR(vpu->alloc_ctx_vm);
-		goto err_dma_contig_vm;
-	}
-
 	ret = v4l2_device_register(&pdev->dev, &vpu->v4l2_dev);
 	if (ret) {
 		dev_err(&pdev->dev, "Failed to register v4l2 device\n");
-		goto err_v4l2_dev_reg;
+		goto err_dma_contig;
 	}
 
 	platform_set_drvdata(pdev, vpu);
@@ -839,10 +824,6 @@ err_enc_reg:
 	}
 err_dec_reg:
 	v4l2_device_unregister(&vpu->v4l2_dev);
-err_v4l2_dev_reg:
-	vb2_dma_contig_cleanup_ctx(vpu->alloc_ctx_vm);
-err_dma_contig_vm:
-	vb2_dma_contig_cleanup_ctx(vpu->alloc_ctx);
 err_dma_contig:
 	pm_runtime_disable(vpu->dev);
 	vpu->variant->clk_disable(vpu);
@@ -878,8 +859,6 @@ static int rockchip_vpu_remove(struct platform_device *pdev)
 	if (vpu->variant->needs_enc_after_dec_war)
 		rockchip_vpu_enc_free_dummy_ctx(vpu);
 	v4l2_device_unregister(&vpu->v4l2_dev);
-	vb2_dma_contig_cleanup_ctx(vpu->alloc_ctx_vm);
-	vb2_dma_contig_cleanup_ctx(vpu->alloc_ctx);
 	pm_runtime_disable(vpu->dev);
 	vpu->variant->clk_disable(vpu);
 
