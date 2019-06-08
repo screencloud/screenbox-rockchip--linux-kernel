@@ -1,7 +1,7 @@
 
-obj-$(CONFIG_VIDEO_ROCKCHIP_VPU) += rockchip-vpu.o
+obj-$(CONFIG_VIDEO_ROCKCHIP_VPU_44) += rockchip-vpu-44.o
 
-rockchip-vpu-y += rockchip_vpu.o \
+rockchip-vpu-44-y += rockchip_vpu.o \
 		rockchip_vpu_dec.o \
 		rockchip_vpu_enc.o \
 		rockchip_vpu_hw.o \

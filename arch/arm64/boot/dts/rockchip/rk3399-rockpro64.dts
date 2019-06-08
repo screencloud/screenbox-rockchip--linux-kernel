@@ -1105,16 +1105,16 @@
 	status = "disabled";
 };
 
-// &vdec {
-// 	status = "okay";
-// };
+&vdec {
+	status = "disabled";
+};
 
 &vdec_mmu {
 	status = "okay";
 };
 
 &vpu {
-	status = "okay";
+	status = "disabled";
 };
 
 &vpu_mmu {

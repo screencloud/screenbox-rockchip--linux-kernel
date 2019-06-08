@@ -74,7 +74,7 @@ obj-$(CONFIG_VIDEO_AM437X_VPFE)		+= am437x/
 
 obj-$(CONFIG_VIDEO_XILINX)		+= xilinx/
 
-obj-$(CONFIG_VIDEO_ROCKCHIP_VPU)	+= rockchip-vpu/
+obj-$(CONFIG_VIDEO_ROCKCHIP_VPU_44)	+= rockchip-vpu/
 
 obj-$(CONFIG_VIDEO_RCAR_VIN)		+= rcar-vin/
 
