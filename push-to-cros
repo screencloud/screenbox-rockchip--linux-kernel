@@ -1,0 +1,28 @@
+#!/bin/bash
+
+if [[ $# -ne 1 ]]; then
+  echo "usage: $1 root@192.168.88.231:"
+  echo "usage: $1 /media/ayufan/ROOT-A/"
+  exit 1
+fi
+
+set -xe
+
+KERNEL_VERSION=$(make -s kernelversion)
+
+find out/linux_modules/lib/modules/$KERNEL_VERSION/ -name *.ko | \
+  xargs aarch64-linux-gnu-strip --strip-debug
+
+if [[ "$1" == *:* ]]; then
+  scp arch/arm64/boot/Image "$1/boot/vmlinuz-$KERNEL_VERSION"
+  scp arch/arm64/boot/dts/rockchip/rk3399-rockpro64*.dtb "$1/boot/dts/"
+  #scp -r out/linux_modules/lib/modules/$KERNEL_VERSION/kernel $1/lib/modules/$KERNEL_VERSION/
+elif [[ -e $1/lib/modules/$KERNEL_VERSION/ ]]; then
+  rsync --progress -u -a arch/arm64/boot/Image "$1/boot/vmlinuz-$KERNEL_VERSION"
+  rsync --progress -u -a arch/arm64/boot/dts/rockchip/rk3399-rockpro64*.dtb "$1/boot/dts/"
+  rsync --progress -u -a --delete "out/linux_modules/lib/modules/$KERNEL_VERSION/" "$1/lib/modules/$KERNEL_VERSION/"
+  sync
+else
+  echo "Unknown format."
+  exit 1
+fi
