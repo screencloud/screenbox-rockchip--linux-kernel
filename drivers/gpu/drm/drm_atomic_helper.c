@@ -265,7 +265,7 @@ update_connector_routing(struct drm_atomic_state *state, int conn_idx)
 	if (new_encoder == connector_state->best_encoder) {
 		set_best_encoder(state, connector_state, new_encoder);
 
-		DRM_DEBUG_ATOMIC("[CONNECTOR:%d:%s] keeps [ENCODER:%d:%s], now on [CRTC:%d:%s]\n",
+		DRM_DEBUG_ATOMIC("[CONNECTOR:%d:%s] keeps [ENCODER:%d:%s], now on [CRTC:%d]\n",
 				 connector->base.id,
 				 connector->name,
 				 new_encoder->base.id,
