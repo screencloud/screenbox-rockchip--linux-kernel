@@ -807,24 +807,57 @@ struct iommu_dma_notifier_data {
 static LIST_HEAD(iommu_dma_masters);
 static DEFINE_MUTEX(iommu_dma_notifier_lock);
 
+/*
+ * Temporarily "borrow" a domain feature flag to to tell if we had to resort
+ * to creating our own domain here, in case we need to clean it up again.
+ */
+#define __IOMMU_DOMAIN_FAKE_DEFAULT		(1U << 31)
+
 static bool do_iommu_attach(struct device *dev, const struct iommu_ops *ops,
 			   u64 dma_base, u64 size)
 {
 	struct iommu_domain *domain = iommu_get_domain_for_dev(dev);
 
 	/*
-	 * If the IOMMU driver has the DMA domain support that we require,
-	 * then the IOMMU core will have already configured a group for this
-	 * device, and allocated the default domain for that group.
+	 * Best case: The device is either part of a group which was
+	 * already attached to a domain in a previous call, or it's
+	 * been put in a default DMA domain by the IOMMU core.
 	 */
-	if (!domain || iommu_dma_init_domain(domain, dma_base, size)) {
-		pr_warn("Failed to set up IOMMU for device %s; retaining platform DMA ops\n",
-			dev_name(dev));
-		return false;
+	if (!domain) {
+		/*
+		 * Urgh. The IOMMU core isn't going to do default domains
+		 * for non-PCI devices anyway, until it has some means of
+		 * abstracting the entirely implementation-specific
+		 * sideband data/SoC topology/unicorn dust that may or
+		 * may not differentiate upstream masters.
+		 * So until then, HORRIBLE HACKS!
+		 */
+		domain = ops->domain_alloc(IOMMU_DOMAIN_DMA);
+		if (!domain)
+			goto out_no_domain;
+
+		domain->ops = ops;
+		domain->type = IOMMU_DOMAIN_DMA | __IOMMU_DOMAIN_FAKE_DEFAULT;
+
+		if (iommu_attach_device(domain, dev))
+			goto out_put_domain;
 	}
+
+	if (iommu_dma_init_domain(domain, dma_base, size))
+		goto out_detach;
 
 	dev->archdata.dma_ops = &iommu_dma_ops;
 	return true;
+
+out_detach:
+	iommu_detach_device(domain, dev);
+out_put_domain:
+	if (domain->type & __IOMMU_DOMAIN_FAKE_DEFAULT)
+		iommu_domain_free(domain);
+out_no_domain:
+	pr_warn("Failed to set up IOMMU for device %s; retaining platform DMA ops\n",
+		dev_name(dev));
+	return false;
 }
 
 static void queue_iommu_attach(struct device *dev, const struct iommu_ops *ops,
@@ -903,13 +936,13 @@ static int __init __iommu_dma_init(void)
 }
 arch_initcall(__iommu_dma_init);
 
-static void __iommu_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
+static bool __iommu_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
 				  const struct iommu_ops *ops)
 {
 	struct iommu_group *group;
 
 	if (!ops)
-		return;
+		return false;
 	/*
 	 * TODO: As a concession to the future, we're ready to handle being
 	 * called both early and late (i.e. after bus_add_device). Once all
@@ -923,6 +956,8 @@ static void __iommu_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
 	} else {
 		queue_iommu_attach(dev, ops, dma_base, size);
 	}
+
+	return true;
 }
 
 void arch_teardown_dma_ops(struct device *dev)
@@ -947,3 +982,25 @@ void arch_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
 	dev->archdata.dma_coherent = coherent;
 	__iommu_setup_dma_ops(dev, dma_base, size, iommu);
 }
+
+bool common_iommu_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
+				  const struct iommu_ops *ops)
+{
+	return __iommu_setup_dma_ops(dev, dma_base, size, ops);
+}
+EXPORT_SYMBOL_GPL(common_iommu_setup_dma_ops);
+
+void common_iommu_teardown_dma_ops(struct device *dev)
+{
+	struct iommu_domain *domain = iommu_get_domain_for_dev(dev);
+
+	if (domain) {
+		iommu_detach_device(domain, dev);
+		if (domain->type & __IOMMU_DOMAIN_FAKE_DEFAULT)
+			iommu_domain_free(domain);
+	}
+
+	arch_teardown_dma_ops(dev);
+}
+EXPORT_SYMBOL_GPL(common_iommu_teardown_dma_ops);
+

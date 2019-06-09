@@ -63,6 +63,10 @@ void iommu_dma_unmap_sg(struct device *dev, struct scatterlist *sg, int nents,
 int iommu_dma_supported(struct device *dev, u64 mask);
 int iommu_dma_mapping_error(struct device *dev, dma_addr_t dma_addr);
 
+bool common_iommu_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
+				  const struct iommu_ops *ops);
+void common_iommu_teardown_dma_ops(struct device *dev);
+
 #else
 
 struct iommu_domain;
