@@ -24,6 +24,13 @@
 		#address-cells = <2>;
 		#size-cells = <2>;
 		ranges;
+
+		linux,cma {
+			compatible = "shared-dma-pool";
+			reusable;
+			size = <0x0 0x8000000>;
+			linux,cma-default;
+		};
 	};
 
 	/* first 64k(0xff8c0000~0xff8d0000) for ddr and suspend */
@@ -1229,6 +1236,6 @@
 		clock-names = "aclk_vdu", "hclk_vdu", "sclk_cabac", "sclk_core";
 		power-domains = <&power RK3399_PD_VDU>;
 		iommus = <&vdec_mmu>;
-		status = "disabled";
+		status = "okay";
 	};
 };
