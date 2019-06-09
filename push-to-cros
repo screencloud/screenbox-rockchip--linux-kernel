@@ -8,18 +8,19 @@ fi
 
 set -xe
 
-find out/linux_modules/lib/modules/4.4.167-rockchip-dev/ -name *.ko | xargs aarch64-linux-gnu-strip --strip-debug
+KERNEL_VERSION=$(make -s kernelversion)-rockchip-dev
 
-[[ "$1" == *:* ]] || [[ -e $1/lib/modules/4.4.167-rockchip-dev/ ]]
+find out/linux_modules/lib/modules/$KERNEL_VERSION/ -name *.ko | \
+  xargs aarch64-linux-gnu-strip --strip-debug
 
 if [[ "$1" == *:* ]]; then
-  scp arch/arm64/boot/Image $1/boot/vmlinuz-4.4.167-rockchip-dev
-  scp arch/arm64/boot/dts/rockchip/rk3399-rockpro64*.dtb $1/boot/dts/
-  #scp -r out/linux_modules/lib/modules/4.4.167-rockchip-dev/kernel $1/lib/modules/4.4.167-rockchip-dev/
-elif [[ -e $1/lib/modules/4.4.167-rockchip-dev/ ]]; then
-  rsync --progress -u -a arch/arm64/boot/Image $1/boot/vmlinuz-4.4.167-rockchip-dev
-  rsync --progress -u -a arch/arm64/boot/dts/rockchip/rk3399-rockpro64*.dtb $1/boot/dts/
-  rsync --progress -u -a --delete out/linux_modules/lib/modules/4.4.167-rockchip-dev/ $1/lib/modules/4.4.167-rockchip-dev/
+  scp arch/arm64/boot/Image "$1/boot/vmlinuz-$KERNEL_VERSION"
+  scp arch/arm64/boot/dts/rockchip/rk3399-rockpro64*.dtb "$1/boot/dts/$KERNEL_VERSION/"
+  #scp -r out/linux_modules/lib/modules/$KERNEL_VERSION/kernel $1/lib/modules/$KERNEL_VERSION/
+elif [[ -e $1/lib/modules/ ]]; then
+  sudo rsync --progress -u -a arch/arm64/boot/Image "$1/boot/vmlinuz-$KERNEL_VERSION"
+  sudo rsync --progress -u -a arch/arm64/boot/dts/rockchip/rk3399-rockpro64*.dtb "$1/boot/dts/$KERNEL_VERSION/"
+  sudo rsync --progress -u -a --delete "out/linux_modules/lib/modules/$KERNEL_VERSION/" "$1/lib/modules/$KERNEL_VERSION/"
   sync
 else
   echo "Unknown format."
