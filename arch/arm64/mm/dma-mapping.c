@@ -24,7 +24,6 @@
 #include <linux/genalloc.h>
 #include <linux/dma-mapping.h>
 #include <linux/dma-contiguous.h>
-#include <linux/dma-iommu.h>
 #include <linux/vmalloc.h>
 #include <linux/swiotlb.h>
 
@@ -53,7 +52,7 @@ static int __init early_coherent_pool(char *p)
 }
 early_param("coherent_pool", early_coherent_pool);
 
-void *arch_alloc_from_atomic_pool(size_t size, struct page **ret_page, gfp_t flags)
+static void *__alloc_from_pool(size_t size, struct page **ret_page, gfp_t flags)
 {
 	unsigned long val;
 	void *ptr = NULL;
@@ -75,14 +74,14 @@ void *arch_alloc_from_atomic_pool(size_t size, struct page **ret_page, gfp_t fla
 	return ptr;
 }
 
-bool arch_in_atomic_pool(void *start, size_t size)
+static bool __in_atomic_pool(void *start, size_t size)
 {
 	return addr_in_gen_pool(atomic_pool, (unsigned long)start, size);
 }
 
-int arch_free_from_atomic_pool(void *start, size_t size)
+static int __free_from_pool(void *start, size_t size)
 {
-	if (!arch_in_atomic_pool(start, size))
+	if (!__in_atomic_pool(start, size))
 		return 0;
 
 	gen_pool_free(atomic_pool, (unsigned long)start, size);
@@ -146,13 +145,13 @@ static void *__dma_alloc(struct device *dev, size_t size,
 	struct page *page;
 	void *ptr, *coherent_ptr;
 	bool coherent = is_device_dma_coherent(dev);
-	pgprot_t prot = arch_get_dma_pgprot(attrs, PAGE_KERNEL, false);
+	pgprot_t prot = __get_dma_pgprot(attrs, PAGE_KERNEL, false);
 
 	size = PAGE_ALIGN(size);
 
 	if (!coherent && !gfpflags_allow_blocking(flags)) {
 		struct page *page = NULL;
-		void *addr = arch_alloc_from_atomic_pool(size, &page, flags);
+		void *addr = __alloc_from_pool(size, &page, flags);
 
 		if (addr)
 			*dma_handle = phys_to_dma(dev, page_to_phys(page));
@@ -196,7 +195,7 @@ static void __dma_free(struct device *dev, size_t size,
 	size = PAGE_ALIGN(size);
 
 	if (!is_device_dma_coherent(dev)) {
-		if (arch_free_from_atomic_pool(vaddr, size))
+		if (__free_from_pool(vaddr, size))
 			return;
 		vunmap(vaddr);
 	}
@@ -316,7 +315,7 @@ static int __swiotlb_mmap(struct device *dev,
 	unsigned long pfn = dma_to_phys(dev, dma_addr) >> PAGE_SHIFT;
 	unsigned long off = vma->vm_pgoff;
 
-	vma->vm_page_prot = arch_get_dma_pgprot(attrs, vma->vm_page_prot,
+	vma->vm_page_prot = __get_dma_pgprot(attrs, vma->vm_page_prot,
 					     is_device_dma_coherent(dev));
 
 	if (dma_mmap_from_coherent(dev, vma, cpu_addr, size, &ret))
