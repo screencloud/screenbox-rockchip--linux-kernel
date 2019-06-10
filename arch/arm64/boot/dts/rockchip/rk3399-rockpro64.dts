@@ -219,9 +219,11 @@
 			"Headphone Jack", "HPOR";
 		simple-audio-card,cpu {
 			sound-dai = <&i2s1>;
+			system-clock-frequency = <12288000>;
 		};
 		simple-audio-card,codec {
 			sound-dai = <&es8316>;
+			system-clock-frequency = <12288000>;
 		};
 	};
 
@@ -395,7 +397,7 @@
 		pinctrl-0 = <&vsel1_gpio>;
 		vsel-gpios = <&gpio1 RK_PC1 GPIO_ACTIVE_HIGH>;
 		regulator-name = "vdd_cpu_b";
-		regulator-min-microvolt = <1150000>;
+		regulator-min-microvolt = <712500>;
 		regulator-max-microvolt = <1500000>;
 		regulator-ramp-delay = <1000>;
 		fcs,suspend-voltage-selector = <1>;
@@ -459,7 +461,7 @@
 		regulators {
 			vdd_center: DCDC_REG1 {
 				regulator-name = "vdd_center";
-				regulator-min-microvolt = <900000>;
+				regulator-min-microvolt = <750000>;
 				regulator-max-microvolt = <1350000>;
 				regulator-ramp-delay = <6001>;
 				regulator-always-on;
@@ -471,7 +473,7 @@
 
 			vdd_cpu_l: DCDC_REG2 {
 				regulator-name = "vdd_cpu_l";
-				regulator-min-microvolt = <1100000>;
+				regulator-min-microvolt = <750000>;
 				regulator-max-microvolt = <1350000>;
 				regulator-ramp-delay = <6001>;
 				regulator-always-on;
