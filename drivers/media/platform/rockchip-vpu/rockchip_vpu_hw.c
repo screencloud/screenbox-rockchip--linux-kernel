@@ -68,7 +68,7 @@ void rockchip_vpu_irq_done(struct rockchip_vpu_dev *vpu)
 	struct rockchip_vpu_ctx *ctx;
 	
 	if (!vpu) {
-		pr_err("rockchip_vpu_irq_done: missing vpu\n");
+		vpu_debug(0, "rockchip_vpu_irq_done: missing vpu\n");
 		return;
 	}
 	
@@ -78,12 +78,16 @@ void rockchip_vpu_irq_done(struct rockchip_vpu_dev *vpu)
 	cancel_delayed_work(&vpu->watchdog_work);
 
 	if (!ctx) {
-		pr_err("rockchip_vpu_irq_done: missing ctx\n");
+		vpu_debug(0, "rockchip_vpu_irq_done: missing ctx\n");
+		return;
+	}
+	if (ctx) {
+		vpu_debug(1, "rockchip_vpu_irq_done: does have ctx!\n");
 		return;
 	}
 
 	if (!ctx->hw.codec_ops) {
-		pr_err("rockchip_vpu_irq_done: missing ctx->hw.codecs_ops\n");
+		vpu_debug(0, "rockchip_vpu_irq_done: missing ctx->hw.codecs_ops\n");
 		return;
 	}
 
