@@ -161,10 +161,10 @@
 		};
 	};
 
-	sound {
+	speakers-sound {
 		compatible = "simple-audio-card";
 		simple-audio-card,mclk-fs = <256>;
-		simple-audio-card,name = "I2S";
+		simple-audio-card,name = "Speakers";
 		simple-audio-card,dai-link@0 {
 			format = "i2s";
 			cpu {
