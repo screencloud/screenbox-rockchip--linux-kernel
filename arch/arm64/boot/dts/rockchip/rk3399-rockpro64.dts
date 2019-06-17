@@ -228,18 +228,18 @@
 		cooling-levels = <0 80 170 230>;
 	};
 
-	hdmi_dp_sound: hdmi-dp-sound {
+	hdmi-sound {
 		status = "okay";
 		compatible = "rockchip,rk3399-hdmi-dp";
 		rockchip,cpu = <&i2s2>;
 		rockchip,codec = <&hdmi>, <&cdn_dp>;
 	};
 
-	es8316-sound {
+	speakers-sound {
 		status = "okay";
 		compatible = "simple-audio-card";
 		simple-audio-card,format = "i2s";
-		simple-audio-card,name = "rockchip,es8316-codec";
+		simple-audio-card,name = "Speakers";
 		simple-audio-card,mclk-fs = <256>;
 		simple-audio-card,widgets =
 			"Microphone", "Mic Jack",
@@ -260,7 +260,7 @@
 	spdif-sound {
 		status = "okay";
 		compatible = "simple-audio-card";
-		simple-audio-card,name = "ROCKCHIP,SPDIF";
+		simple-audio-card,name = "SPDIF";
 		simple-audio-card,cpu {
 			sound-dai = <&spdif>;
 		};
